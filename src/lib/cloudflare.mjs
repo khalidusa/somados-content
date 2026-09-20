@@ -128,13 +128,39 @@ export async function generateArt(prompt, { negative, width = 1080, height = 135
 }
 
 /** حارس النص: يرفض أي صورة مولّدة فيها حروف — النص كله يُطبع في Chromium. */
-export async function hasVisibleText(imageB64) {
+const QUESTIONS = [
+  'Answer YES if EITHER is true: (a) the image contains legible written letters, words, numbers, a sign or a logo; ' +
+  'or (b) one or more people are prominent in the foreground. Otherwise answer NO. Answer with exactly one word: YES or NO.',
+  'Is a human being the main subject of this photograph? Answer with exactly one word: YES or NO.'
+];
+
+/** فحصان لا واحد: السؤال المركّب يمرّر أحياناً صورة أزياء، والسؤال المباشر يمسكها. */
+export async function hasVisibleText(imageB64, { retries = 1, strict = false } = {}) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const r = await visionOnce(imageB64, QUESTIONS[0]);
+    if (r.checked) return r;
+    if (r.checked) return r;
+    if (attempt < retries) await new Promise(res => setTimeout(res, 900));
+  }
+  return { checked: false, hasText: false };
+}
+
+/** الصورة البطلة تمر بالسؤالين؛ رفض أحدهما يكفي. */
+export async function heroGuard(imageB64) {
+  const a = await hasVisibleText(imageB64);
+  if (a.checked && a.hasText) return { checked: true, reject: true, why: 'كتابة أو أشخاص' };
+  const b = await visionOnce(imageB64, QUESTIONS[1]);
+  if (b.checked && b.hasText) return { checked: true, reject: true, why: 'الشخص هو موضوع الصورة' };
+  return { checked: a.checked || b.checked, reject: false };
+}
+
+async function visionOnce(imageB64, question) {
   try {
     const r = await run(MODELS.vision, {
       messages: [{
         role: 'user',
         content: [
-          { type: 'text', text: 'Answer YES if EITHER is true: (a) the image contains legible written letters, words, numbers, a sign or a logo; or (b) one or more people are prominent in the foreground. Otherwise answer NO. Answer with exactly one word: YES or NO.' },
+          { type: 'text', text: question },
           { type: 'image_url', image_url: { url: 'data:image/jpeg;base64,' + imageB64 } }
         ]
       }],

@@ -10,7 +10,7 @@ import { buildPostHTML } from './lib/design.mjs';
 import { buildPost, ROTATION } from './lib/compose.mjs';
 import { monthSlots, targetMonth } from './lib/schedule.mjs';
 import { pool, download, photoQuality, qualityReject } from './lib/photos.mjs';
-import { hasVisibleText, accounts } from './lib/cloudflare.mjs';
+import { hasVisibleText, heroGuard, accounts } from './lib/cloudflare.mjs';
 import { ROOT, POSTS, loadJson, loadHistory, saveHistory, loadPlan, savePlan, findIncompleteMonth } from './lib/store.mjs';
 
 const HASH_MIN_DISTANCE = 10;      // أقل من هذا = صورتان متشابهتان
@@ -129,8 +129,9 @@ async function photosFor(queries, dayId, page, { strict = false } = {}) {
         const bad = qualityReject(await photoQuality(page, b64), { sky: tierIndex === 1 });
         if (bad) { console.log(`  اليوم ${dayId}: ${bad} — نأخذ غيرها`); continue; }
         if (TEXT_GUARD && chosen.length === 0) {       // البطل فقط: الصور الثانوية صغيرة ولا تُقرأ
-          const seen = await hasVisibleText(b64);
-          if (seen.checked && seen.hasText) { console.log(`  اليوم ${dayId}: لافتة أو كتابة داخل الصورة — نأخذ غيرها`); continue; }
+          const seen = await heroGuard(b64);
+          if (!seen.checked) { console.warn(`  اليوم ${dayId}: تعذّر فحص الصورة بالرؤية — نرفضها احتياطاً`); continue; }
+          if (seen.reject) { console.log(`  اليوم ${dayId}: ${seen.why} — نأخذ غيرها`); continue; }
         }
         const h = await photoHash(page, b64);
         const clash = history.hashes.find(prev => hammingDistance(prev.hash, h) < HASH_MIN_DISTANCE);
@@ -145,13 +146,77 @@ async function photosFor(queries, dayId, page, { strict = false } = {}) {
   return chosen;
 }
 
+/** لكل موقع في القالب: مدينة لها صورة مطابقة فعلاً، وإلا ننتقل لمدينة أخرى. */
+async function photosForCities(post, dayId, page) {
+  const chosen = [];
+  const usedCities = new Set();
+  const pool = post.copy.cityPool ?? [];
+  const picked = [];
+  for (let slot = 0; slot < post.photosNeeded; slot++) {
+    let got = null;
+    for (const city of pool) {
+      if (usedCities.has(city.code)) continue;
+      for (const q of city.queries) {
+        if (!poolCache.has(q)) poolCache.set(q, await pool2(q));
+        const cands = poolCache.get(q).filter(c => c.relevant);
+        const taken = await tryCandidates(cands, chosen, dayId, page, false);
+        if (taken) { got = { ...taken, city }; break; }
+      }
+      if (got) break;
+    }
+    if (!got) return null;
+    usedCities.add(got.city.code);
+    picked.push({ code: got.city.code, ar: got.city.ar });
+    chosen.push(got);
+  }
+  // الأسماء والعنوان يتبعان الصور التي وُجدت فعلاً، لا التي خُطّط لها
+  const before = post.copy.cities ?? [];
+  post.copy.cities = picked;
+  if (post.photosNeeded === 2 && picked.length === 2) {
+    const oldFrom = post.copy.from, oldTo = post.copy.to;
+    post.copy.from = picked[0].ar; post.copy.to = picked[1].ar;
+    const swap = (t) => String(t).replace(oldFrom, picked[0].ar).replace(oldTo, picked[1].ar);
+    post.copy.headline = post.copy.headline.map(swap);
+    post.copy.sub = swap(post.copy.sub);
+    post.headlineKey = post.copy.headline.join(' ') + ' | ' + picked[0].ar + '→' + picked[1].ar;
+  }
+  void before;
+  return chosen;
+}
+
+const pool2 = async (q) => pool([q]);
+
+/** يمرّ على المرشحين ويعيد أول صورة تعبر كل الفحوص. */
+async function tryCandidates(candidates, chosen, dayId, page, sky) {
+  for (const cand of candidates) {
+    if (history.photoIds[cand.id]) continue;
+    if (chosen.some(c => c.id === cand.id)) continue;
+    let b64;
+    try { b64 = await download(cand); } catch { continue; }
+    const bad = qualityReject(await photoQuality(page, b64), { sky });
+    if (bad) { console.log(`  اليوم ${dayId}: ${bad} — نأخذ غيرها`); continue; }
+    if (TEXT_GUARD) {
+      const seen = await heroGuard(b64);
+      if (!seen.checked) { console.warn(`  اليوم ${dayId}: تعذّر فحص الصورة بالرؤية — نرفضها احتياطاً`); continue; }
+      if (seen.reject) { console.log(`  اليوم ${dayId}: ${seen.why} — نأخذ غيرها`); continue; }
+    }
+    const h = await photoHash(page, b64);
+    const clash = history.hashes.find(prev => hammingDistance(prev.hash, h) < HASH_MIN_DISTANCE);
+    if (clash) { console.log(`  اليوم ${dayId}: صورة تشبه ${clash.ref} — نأخذ غيرها`); continue; }
+    return { ...cand, b64, hash: h, tier: 0 };
+  }
+  return null;
+}
+
 const results = [...done.values()];
 const todo = planned.filter(p => !done.has(p.day)).slice(0, limit);
 
 await withBrowser(async (page) => {
   for (const post of todo) {
     const dayId = String(post.day).padStart(2, '0');
-    const photos = await photosFor(post.queries, dayId, page, { strict: true });
+    const photos = post.cityLabels
+      ? await photosForCities(post, dayId, page)
+      : await photosFor(post.queries, dayId, page, { strict: true });
     if (!photos) { console.warn(`  اليوم ${dayId}: لم نجد صوراً كافية — نتخطّاه`); continue; }
 
     // القوالب التي تطلب صورة ثانية داخل النص (البطاقة البريدية) تأخذها من المجموعة نفسها

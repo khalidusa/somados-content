@@ -34,7 +34,7 @@ export const searchPhotos = (q, page = 1, per = 60) =>
 
 // كلمات ترفض الصورة من عنوانها وحده — قبل أي تنزيل.
 // الوجوه والحشود والأعلام تجعل الإعلان يبدو صورة أخبار لا إعلان سفر.
-const ALT_BLOCK = /\b(people|person|man|woman|women|men|boy|girl|child|kid|tourist|selfie|portrait|crowd|festival|flag|protest|soldier|military|war|ruins?|sign|text|poster|billboard|logo|banner|menu|newspaper|hand|hands|holding|fruit|food|plate|closeup|close-up|macro|animal|cat|dog|bird)\b/i;
+const ALT_BLOCK = /\b(people|person|persons|individual|man|woman|women|men|boy|girl|child|kid|tourist|selfie|portrait|posing|poses|model|fashion|outfit|wearing|jacket|sunglasses|smiling|standing|sitting|young|crowd|festival|flag|protest|soldier|military|war|ruins?|sign|text|poster|billboard|logo|banner|menu|newspaper|hand|hands|holding|fruit|food|plate|closeup|close-up|macro|animal|cat|dog|bird|hotel room|interior)\b/i;
 
 export function metaFilter(p) {
   const long = Math.max(p.width, p.height);

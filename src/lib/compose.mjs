@@ -105,7 +105,12 @@ export function buildPost({ monthKey, slot, index, brand, data, salt = '' }) {
     ...(layout === 'sidebar' ? { railText: 'عروض الطيران' } : {})
   };
 
-  if (cities) copy.cities = cities;
+  if (cities) {
+    copy.cities = cities;
+    // بديل جاهز لكل موقع: إن لم تكن للمدينة صورة مطابقة نستبدل المدينة نفسها،
+    // لأن صورة سماء تحت اسم "إسطنبول" كذبة صغيرة يراها الزبون.
+    copy.cityPool = shuffle(rng, TR).map(code => ({ code, ar: destinations[code].ar, queries: destinations[code].q }));
+  }
   if (layout === 'postcard') copy.photo2Needed = true;
 
   const hashtags = buildHashtags(rng, data.copyAr.hashtags, toCode, fromCode);
