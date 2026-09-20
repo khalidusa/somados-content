@@ -1,0 +1,120 @@
+name: توليد المحتوى الشهري
+
+on:
+  workflow_dispatch:
+    inputs:
+      days:      { description: 'عدد الأيام', default: '30', required: false }
+      start:     { description: 'تاريخ البدء YYYY-MM-DD (فارغ = اليوم)', required: false }
+      placeholder: { description: 'خلفيات وهمية بلا صرف حصة', type: boolean, default: false }
+  schedule:
+    - cron: '0 2 1 * *'     # أول كل شهر 02:00 UTC — التأخير 10–60 دقيقة طبيعي، لذلك نسبق بأيام
+
+concurrency:
+  group: content-write      # يمنع تسابق الرفع بين هذا وworkflow الطابور
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: 'npm' }
+
+      # سيرفرات GitHub تشحن ffmpeg بلا ffprobe — بلا هذه الخطوة كل المقاطع تُقرأ 0.0 ثانية
+      - name: تثبيت ffmpeg و ffprobe
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          ffmpeg -version | head -1 && ffprobe -version | head -1
+
+      - run: npm ci
+
+      # الموسيقى بمستودع خاص: رخصة Pixabay تمنع إعادة توزيع الملف الصوتي مستقلاً،
+      # ووضعه بمستودع عام هو بالضبط إعادة توزيع. الفيديو الناتج مسموح، الملف الخام لا.
+      - name: جلب الموسيقى من المستودع الخاص
+        if: ${{ !inputs.placeholder }}
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ vars.MUSIC_REPO }}
+          token: ${{ secrets.MUSIC_TOKEN }}
+          path: .music
+      - name: نقل الموسيقى
+        if: ${{ !inputs.placeholder }}
+        run: mkdir -p assets/music && cp .music/*.mp3 assets/music/ && ls assets/music | wc -l
+
+      # حرج: بلا سحب وسائط الشهور السابقة، fs.existsSync يرجع false لكل يوم
+      # فيعيد التوليد من الصفر ويحرق الحصة اليومية. الاستئناف يعتمد على وجود الملف.
+      - name: سحب الوسائط السابقة من فرع media
+        run: |
+          mkdir -p content
+          if git ls-remote --exit-code --heads origin media >/dev/null 2>&1; then
+            git fetch origin media --depth 1
+            git archive FETCH_HEAD | tar -x -C content
+            echo "سُحب: $(find content -type f \( -name '*.png' -o -name '*.mp4' \) | wc -l) ملف"
+          else
+            echo "فرع media غير موجود بعد — أول تشغيل"
+          fi
+
+      - run: npm test
+
+      - name: التوليد
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN:  ${{ secrets.CF_API_TOKEN }}
+        run: |
+          node scripts/generate.js \
+            --days "${{ inputs.days || 30 }}" \
+            ${{ inputs.start && format('--start {0}', inputs.start) || '' }} \
+            ${{ inputs.placeholder && '--placeholder' || '' }}
+
+      - run: node scripts/build-review.js
+
+      # نشر الوسائط على فرع media كـorphan: تاريخه commit واحد دائماً،
+      # فالمستودع لا يتضخم مهما تراكمت الشهور (حذف ملف لا يحذفه من تاريخ git).
+      - name: نشر الوسائط على فرع media
+        run: |
+          git config user.name  "somados-bot"
+          git config user.email "bot@users.noreply.github.com"
+          rm -rf .mw && git worktree add --detach .mw >/dev/null
+          cd .mw
+          git checkout --orphan media
+          git rm -rf . --quiet 2>/dev/null || true
+          rsync -a --delete --exclude .git ../content/ ./
+          touch .nojekyll
+          git add -A -f
+          git commit -q -m "media: $(date -u +%Y-%m-%d)" || { echo "لا وسائط جديدة"; exit 0; }
+          for i in 1 2 3 4 5; do
+            git push -f origin media && exit 0
+            echo "رُفض الدفع — محاولة $i"; sleep $((i * 5))
+          done
+          echo "::error::فشل دفع فرع media بعد 5 محاولات"; exit 1
+
+      # الحالة والسجلات على main. الرفع مع معالجة التسابق: workflowان يرفعان لنفس الفرع،
+      # فإذا رُفض نسحب ونعيد الترتيب فوقه، خمس مرات بفواصل متزايدة.
+      - name: حفظ الحالة على main
+        run: |
+          git config user.name  "somados-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add -A data
+          git commit -q -m "state: بناء $(date -u +%Y-%m-%d)" || echo "لا تغييرات"
+          for i in 1 2 3 4 5; do
+            if git push; then echo "رُفع بالمحاولة $i"; exit 0; fi
+            echo "رُفض — سحب وإعادة ترتيب (محاولة $i)"
+            git pull --rebase --autostash origin "${GITHUB_REF_NAME}"
+            sleep $((i * 5))
+          done
+          echo "::error::فشل الرفع بعد 5 محاولات"; exit 1
+
+      # افحص السجل لا الحالة: الخروج النظيف عند نفاد الحصة صحيح لكنه ينتج صفراً
+      - name: تلخيص
+        if: always()
+        run: |
+          echo "### نتيجة البناء" >> $GITHUB_STEP_SUMMARY
+          echo "- صور: $(ls content/images 2>/dev/null | wc -l)" >> $GITHUB_STEP_SUMMARY
+          echo "- ريلز: $(ls content/reels 2>/dev/null | wc -l)" >> $GITHUB_STEP_SUMMARY

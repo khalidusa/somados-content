@@ -1,0 +1,53 @@
+name: تعبئة طابور Buffer
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run: { description: 'تشغيل تجريبي بلا إنشاء منشورات', type: boolean, default: true }
+  schedule:
+    # كل 3 ساعات: بمنشورين يومياً لا تكفي دورة واحدة باليوم، وريل المساء يبقى خارج الطابور
+    - cron: '20 */3 * * *'
+
+concurrency:
+  group: content-write
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  fill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: 'npm' }
+      - run: npm ci
+
+      # كل رابط وسائط لازم يرجع 200 قبل الجدولة — Buffer يسحب الوسائط لحظة النشر لا الآن
+      - name: فحص الروابط الحية
+        env: { PAGES_BASE_URL: '${{ vars.PAGES_BASE_URL }}' }
+        run: node scripts/check-media-urls.js
+
+      - name: التعبئة
+        env:
+          BUFFER_ACCESS_TOKEN: ${{ secrets.BUFFER_ACCESS_TOKEN }}
+          PAGES_BASE_URL: ${{ vars.PAGES_BASE_URL }}
+          BUFFER_FIRST_COMMENT: ${{ vars.BUFFER_FIRST_COMMENT }}
+          DECLARE_AI_GENERATED: ${{ vars.DECLARE_AI_GENERATED }}
+        run: node scripts/fill-queue.js ${{ (github.event_name == 'workflow_dispatch' && inputs.dry_run) && '--dry-run' || '' }}
+
+      # GitHub يعطّل الجداول بعد 60 يوماً بلا نشاط — commit صغير كل تشغيل يبقيها حية
+      - name: نبضة إبقاء الجدولة حية
+        run: |
+          git config user.name  "somados-bot"
+          git config user.email "bot@users.noreply.github.com"
+          date -u +%Y-%m-%dT%H:%M:%SZ > data/last-queue-run.txt
+          git add data/last-queue-run.txt
+          git commit -m "chore: نبضة الطابور" || exit 0
+          for i in 1 2 3 4 5; do
+            git push && exit 0
+            git pull --rebase --autostash origin "${GITHUB_REF_NAME}"
+            sleep $((i * 5))
+          done

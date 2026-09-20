@@ -3,3 +3,10 @@ node_modules/
 out/
 assets/music/
 *.mp4
+
+# الوسائط المُنتَجة تعيش على فرع media وحده — main كود خالص،
+# وتاريخ git لا ينسى ملفاً حُذف، فبقاؤها هنا يضخّم المستودع للأبد
+content/images/
+content/reels/
+content/raw/
+content/*.html
