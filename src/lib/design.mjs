@@ -98,6 +98,26 @@ const headlineHTML = (h) => Array.isArray(h)
 const benefits = (items) => `
 <div class="bens" data-guard="المزايا">${items.map(t => `<span class="ben"><span class="benico">${ICON.check}</span>${t}</span>`).join('')}</div>`;
 
+/** كل قالب خلفيته صورة يضيف هذه الطبقة: ستارة سفلية وألوان نص فاتحة،
+ *  وإلا ضاع شريط الدفع والتذييل على صورة فاتحة. */
+export const PHOTO_STACK = `
+.bgfull{position:absolute;inset:0;overflow:hidden}
+.scrim{position:absolute;right:0;left:0;bottom:0;height:640px;
+  background:linear-gradient(180deg,rgba(4,44,50,0),rgba(4,44,50,.42) 34%,rgba(4,44,50,.82) 72%,rgba(4,44,50,.94))}
+.scrimtop{position:absolute;right:0;left:0;top:0;height:300px;
+  background:linear-gradient(180deg,rgba(4,44,50,.52),rgba(4,44,50,0))}
+.ben{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.36);color:#fff}
+.benico{color:#7fe9e9}
+.pay{border-top-color:rgba(255,255,255,.3)}
+.mark{color:#fff}
+.marktx{color:#eafafa}
+.curr{color:#c9e9e9}
+.bio{color:#eafafa}
+.bioico{color:#7fe9e9}
+.hlabel{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.34);color:#fff}
+.sitepill{box-shadow:0 14px 30px rgba(0,0,0,.34)}
+`;
+
 const BASE = `
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Noto Kufi Arabic','Tajawal',sans-serif;-webkit-font-smoothing:antialiased;background:#fff}
@@ -1353,13 +1373,15 @@ export async function roundtrip({ size, photos, copy }) {
 .tmain{flex:1;padding:26px 30px;display:flex;flex-direction:column;justify-content:space-between}
 .trow{display:flex;justify-content:space-between;align-items:center}
 .tk{color:${P.deep};font-size:19px;font-weight:600;letter-spacing:.12em}
-.tcity{color:${P.ink};font-size:46px;font-weight:800;line-height:1.15}
+.tk2{color:${P.body};font-size:18px;font-weight:500}
+.tarrow{color:${P.teal};font-size:32px;font-weight:800;padding-top:16px}
+.tcity{color:${P.ink};font-size:44px;font-weight:800;line-height:1.15}
 .tar{color:${P.body};font-size:21px}
 .tsep{height:1px;background:${P.line};margin:14px 0}
 .back{position:absolute;top:628px;right:80px;left:80px;height:96px;background:${P.ink};border-radius:22px;
   display:flex;align-items:center;justify-content:space-between;padding:0 30px;z-index:4}
 .back span{color:#fff;font-size:26px;font-weight:700}
-.back i{color:${P.teal};font-size:26px;font-style:normal;font-weight:800}
+.back i{color:${P.teal};font-size:24px;font-style:normal;font-weight:700}
 .hl{position:absolute;top:786px;right:64px;left:64px;font-size:74px;text-align:center;white-space:nowrap}
 .sub{position:absolute;top:930px;right:64px;left:64px;font-size:28px;text-align:center}
 .bens{position:absolute;top:1006px;right:56px;left:56px}
@@ -1370,14 +1392,14 @@ export async function roundtrip({ size, photos, copy }) {
   <div class="tpic"><img class="cover" src="data:image/jpeg;base64,${photos[0]}"></div>
   <div class="tmain">
     <div class="trow"><span class="tk">الذهاب</span><span class="tk">SOMADOS</span></div>
-    <div class="trow"><div><div class="tcity">${copy.fromCode}</div><div class="tar">${copy.from}</div></div>
-      <div style="color:${P.teal};font-size:32px;font-weight:800">←</div>
-      <div><div class="tcity">${copy.toCode}</div><div class="tar">${copy.to}</div></div></div>
+    <div class="trow"><div><div class="tk2">من</div><div class="tcity">${copy.fromCode}</div><div class="tar">${copy.from}</div></div>
+      <div class="tarrow">←</div>
+      <div><div class="tk2">إلى</div><div class="tcity">${copy.toCode}</div><div class="tar">${copy.to}</div></div></div>
     <div class="tsep"></div>
-    <div class="trow"><span class="tar">رحلات يومية</span><span class="tar">مباشر</span></div>
+    <div class="trow"><span class="tar">مواعيد يومية</span><span class="tar">مسار مباشر</span></div>
   </div>
 </div>
-<div class="back" data-guard="العودة"><span>العودة</span><i>${copy.toCode} ← ${copy.fromCode}</i></div>
+<div class="back" data-guard="العودة"><span>تذكرة العودة</span><i>من ${copy.to} إلى ${copy.from}</i></div>
 ${header(await logo(), copy.label)}
 <div class="hl" data-guard="العنوان" data-fit="76" data-room="952">${headlineHTML(copy.headline)}</div>
 <div class="sub" data-guard="السطر">${copy.sub}</div>
@@ -1455,7 +1477,351 @@ ${footer(copy)}`;
   return shell(size, css, body);
 }
 
-export const LAYOUTS = { destination, boarding, arches, fan, ticket, windowSeat, diagonal, grid, routemap, overlay, split, panorama, polaroids, quad, wave, passport, sidebar, bigcircle, mosaic, postertype, filmstrip, board, stack, duo, glass, prism, postcard, marquee, topo, columns, blob, roundtrip, viewfinder, halfdome };
+
+/* ═════ عائلة «الخلفية صورة» — من ٣٥ إلى ٤٤ ═════ */
+
+/* ٣٥ — بطاقتان زجاجيتان */
+export async function glassduo({ size, photo, copy }) {
+  const css = PHOTO_STACK + `
+.g1{position:absolute;top:196px;right:74px;border-radius:28px;padding:22px 30px;background:rgba(255,255,255,.2);
+  backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.4);color:#fff;font-size:26px;font-weight:600}
+.g2{position:absolute;top:556px;right:74px;left:74px;border-radius:38px;padding:38px 42px 42px;
+  background:rgba(255,255,255,.86);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.7);
+  box-shadow:0 30px 70px rgba(0,0,0,.34)}
+.glab{color:${P.deep};font-size:21px;font-weight:600;letter-spacing:.1em}
+.hl{position:relative;margin-top:12px;font-size:74px;white-space:nowrap}
+.sub{position:relative;margin-top:14px;font-size:28px;color:${P.body}}
+.plane{position:absolute;top:150px;left:60px;width:222px;z-index:5;transform:rotate(-10deg);
+  filter:drop-shadow(0 18px 28px rgba(0,0,0,.4))}
+.bens{position:absolute;top:1006px;right:56px;left:56px}
+.pay{bottom:168px}`;
+  const body = `
+<div class="bgfull"><img class="cover" src="data:image/jpeg;base64,${photo}"></div>
+<div class="scrimtop"></div><div class="scrim"></div>
+${copy.plane ? `<img class="plane" data-guard="الطائرة" data-soft="1" src="${await plane(copy.plane)}">` : ''}
+<div class="g1" data-guard="شارة المسار">${copy.from} ⇄ ${copy.to}</div>
+<div class="g2" data-guard="البطاقة">
+  <div class="glab">${copy.label}</div>
+  <div class="hl" data-fit="74" data-room="860">${headlineHTML(copy.headline)}</div>
+  <div class="sub">${copy.sub}</div>
+</div>
+${header(await logo(), '')}
+${benefits(copy.benefits)}
+${await payments()}
+${footer(copy)}`;
+  return shell(size, css, body);
+}
+
+/* ٣٦ — لوح أبيض يصعد من الأسفل بحافة منحنية */
+export async function sheet({ size, photo, copy }) {
+  const css = PHOTO_STACK + `
+.scrim{height:300px}
+.curve{position:absolute;right:0;left:0;top:560px;height:150px;z-index:3}
+.panel{position:absolute;right:0;left:0;top:700px;bottom:0;background:#fff;z-index:3}
+.ben{background:${P.mist};border-color:${P.line};color:#2f4142}
+.benico{color:${P.teal}} .mark{color:#22383a} .marktx{color:#3f5051} .curr{color:${P.body}}
+.bio{color:${P.deep}} .bioico{color:${P.teal}} .pay{border-top-color:${P.line}}
+.rt{position:absolute;top:614px;right:50%;transform:translateX(50%);background:${P.ink};color:#fff;border-radius:999px;
+  padding:13px 30px;font-size:24px;font-weight:700;z-index:5;display:flex;align-items:center;gap:12px}
+.rt i{width:8px;height:8px;border-radius:50%;background:${P.teal};display:block}
+.hl{position:absolute;top:748px;right:64px;left:64px;font-size:78px;text-align:center;white-space:nowrap;z-index:4}
+.sub{position:absolute;top:876px;right:64px;left:64px;font-size:29px;text-align:center;z-index:4}
+.plane{position:absolute;top:186px;left:56px;width:228px;z-index:4;transform:rotate(-10deg);
+  filter:drop-shadow(0 18px 28px rgba(0,0,0,.36))}
+.bens{position:absolute;top:952px;right:56px;left:56px;z-index:4}
+.pay{bottom:168px;z-index:4}`;
+  const body = `
+<div class="bgfull"><img class="cover" src="data:image/jpeg;base64,${photo}"></div>
+<div class="scrimtop"></div>
+${copy.plane ? `<img class="plane" data-guard="الطائرة" data-soft="1" src="${await plane(copy.plane)}">` : ''}
+<svg class="curve" viewBox="0 0 1080 150" preserveAspectRatio="none"><path d="M0 150 C 300 10, 780 10, 1080 150 Z" fill="#fff"/></svg>
+<div class="panel"></div>
+<div class="rt" data-guard="المسار">${copy.from}<i></i>${copy.to}</div>
+${header(await logo(), copy.label)}
+<div class="hl" data-guard="العنوان" data-fit="78" data-room="952">${headlineHTML(copy.headline)}</div>
+<div class="sub" data-guard="السطر">${copy.sub}</div>
+${benefits(copy.benefits)}
+${await payments()}
+${footer(copy)}`;
+  return shell(size, css, body);
+}
+
+/* ٣٧ — لوح زجاجي رأسي على الجانب */
+export async function glasspanel({ size, photo, copy }) {
+  const css = PHOTO_STACK + `
+.gp{position:absolute;top:150px;bottom:386px;right:64px;width:520px;border-radius:36px;padding:44px 40px;
+  background:rgba(255,255,255,.84);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.7);
+  box-shadow:0 30px 64px rgba(0,0,0,.32);display:flex;flex-direction:column;justify-content:space-between}
+.glab{color:${P.deep};font-size:21px;font-weight:600;letter-spacing:.1em}
+.hl{font-size:66px;line-height:1.22;margin-top:16px}
+.sub{color:${P.body};font-size:27px;margin-top:18px;line-height:1.55}
+.rtp{display:inline-flex;align-items:center;gap:12px;background:${P.ink};color:#fff;border-radius:999px;
+  padding:13px 28px;font-size:23px;font-weight:700;align-self:flex-start}
+.rtp i{width:8px;height:8px;border-radius:50%;background:${P.teal};display:block}
+.plane{position:absolute;top:196px;left:58px;width:220px;z-index:4;transform:rotate(-11deg);
+  filter:drop-shadow(0 18px 28px rgba(0,0,0,.4))}
+.bens{position:absolute;top:1006px;right:56px;left:56px}
+.pay{bottom:168px}`;
+  const body = `
+<div class="bgfull"><img class="cover" src="data:image/jpeg;base64,${photo}"></div>
+<div class="scrimtop"></div><div class="scrim"></div>
+${copy.plane ? `<img class="plane" data-guard="الطائرة" data-soft="1" src="${await plane(copy.plane)}">` : ''}
+<div class="gp" data-guard="اللوح">
+  <div><div class="glab">${copy.label}</div>
+    <div class="hl" data-fit="66" data-room="440" data-tall="300">${headlineHTML(copy.headline)}</div>
+    <div class="sub">${copy.sub}</div></div>
+  <div class="rtp">${copy.from}<i></i>${copy.to}</div>
+</div>
+${header(await logo(), '')}
+${benefits(copy.benefits)}
+${await payments()}
+${footer(copy)}`;
+  return shell(size, css, body);
+}
+
+/* ٣٨ — شارة دائرية في قلب الصورة */
+export async function medallion({ size, photo, copy }) {
+  const css = PHOTO_STACK + `
+.med{position:absolute;top:268px;right:50%;transform:translateX(50%);width:640px;height:640px;border-radius:50%;
+  background:rgba(255,255,255,.92);backdrop-filter:blur(10px);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:14px;padding:0 60px;box-shadow:0 30px 70px rgba(0,0,0,.36);z-index:4}
+.medring{position:absolute;top:242px;right:50%;transform:translateX(50%);width:692px;height:692px;border-radius:50%;
+  border:2px dashed rgba(255,255,255,.7);z-index:3}
+.glab{color:${P.deep};font-size:22px;font-weight:600;letter-spacing:.14em}
+.hl{font-size:74px;text-align:center;white-space:nowrap}
+.sub{color:${P.body};font-size:27px;text-align:center;line-height:1.5}
+.rtp{margin-top:6px;display:inline-flex;align-items:center;gap:12px;background:${P.ink};color:#fff;border-radius:999px;
+  padding:12px 26px;font-size:22px;font-weight:700}
+.rtp i{width:8px;height:8px;border-radius:50%;background:${P.teal};display:block}
+.bens{position:absolute;top:1006px;right:56px;left:56px}
+.pay{bottom:168px}`;
+  const body = `
+<div class="bgfull"><img class="cover" src="data:image/jpeg;base64,${photo}"></div>
+<div class="scrimtop"></div><div class="scrim"></div>
+<div class="medring"></div>
+<div class="med" data-guard="الشارة">
+  <div class="glab">${copy.label}</div>
+  <div class="hl" data-fit="74" data-room="500">${headlineHTML(copy.headline)}</div>
+  <div class="sub">${copy.sub}</div>
+  <div class="rtp">${copy.from}<i></i>${copy.to}</div>
+</div>
+${header(await logo(), '')}
+${benefits(copy.benefits)}
+${await payments()}
+${footer(copy)}`;
+  return shell(size, css, body);
+}
+
+/* ٣٩ — ثنائي اللون: الصورة بطبقة تركوازية وخط ضخم */
+export async function duotone({ size, photo, copy }) {
+  const css = PHOTO_STACK + `
+.bgfull img{filter:grayscale(1) contrast(1.05)}
+.duo1{position:absolute;inset:0;background:${P.dark};mix-blend-mode:multiply;opacity:.9}
+.duo2{position:absolute;inset:0;background:${P.teal};mix-blend-mode:lighten;opacity:.42}
+.giant{position:absolute;top:300px;right:64px;left:64px;color:#fff;font-weight:900;font-size:150px;
+  line-height:.98;text-align:center;white-space:nowrap;text-shadow:0 20px 50px rgba(0,0,0,.35)}
+.rule{position:absolute;top:492px;right:340px;left:340px;height:6px;background:#fff;border-radius:3px}
+.hl{position:absolute;top:548px;right:64px;left:64px;font-size:62px;text-align:center;white-space:nowrap}
+.hl .lead{color:#fff} .hl .accent{color:#8ff0f0}
+.sub{position:absolute;top:660px;right:64px;left:64px;font-size:29px;text-align:center;color:#dff5f5}
+.rt{position:absolute;top:740px;right:50%;transform:translateX(50%);background:#fff;color:${P.ink};border-radius:999px;
+  padding:13px 30px;font-size:24px;font-weight:700;display:flex;align-items:center;gap:12px}
+.rt i{width:8px;height:8px;border-radius:50%;background:${P.teal};display:block}
+.plane{position:absolute;top:788px;right:50%;width:360px;transform:translateX(50%);
+  filter:drop-shadow(0 20px 30px rgba(0,0,0,.4))}
+.bens{position:absolute;top:1006px;right:56px;left:56px}
+.pay{bottom:168px}`;
+  const body = `
+<div class="bgfull"><img class="cover" src="data:image/jpeg;base64,${photo}"></div>
+<div class="duo1"></div><div class="duo2"></div>
+<div class="giant" data-guard="اسم المدينة" data-fit="150" data-room="952">${copy.to}</div>
+<div class="rule"></div>
+${header(await logo(), copy.label)}
+<div class="hl" data-guard="العنوان" data-fit="62" data-room="952">${headlineHTML(copy.headline)}</div>
+<div class="sub" data-guard="السطر">${copy.sub}</div>
+<div class="rt" data-guard="المسار">${copy.from}<i></i>${copy.to}</div>
+${copy.plane ? `<img class="plane" data-guard="الطائرة" data-soft="1" src="${await plane(copy.plane)}">` : ''}
+${benefits(copy.benefits)}
+${await payments()}
+${footer(copy)}`;
+  return shell(size, css, body);
+}
+
+/* ٤٠ — بطاقة صعود طافية فوق صورة */
+export async function passover({ size, photo, copy }) {
+  const css = PHOTO_STACK + `
+.pass{position:absolute;top:470px;right:76px;left:76px;height:312px;background:#fff;border-radius:26px;
+  box-shadow:0 30px 64px rgba(0,0,0,.36);display:flex;overflow:hidden;z-index:4}
+.stub{width:190px;background:${P.mist};border-right:2px dashed ${P.line};display:flex;flex-direction:column;
+  align-items:center;justify-content:space-between;padding:24px 18px}
+.stubcode{color:${P.teal};font-size:34px;font-weight:800}
+.bars{width:100%;height:84px;background:repeating-linear-gradient(90deg,${P.ink} 0 3px,transparent 3px 6px,${P.ink} 6px 8px,transparent 8px 14px)}
+.pmain{flex:1;padding:26px 32px;display:flex;flex-direction:column;justify-content:space-between}
+.prow{display:flex;justify-content:space-between;align-items:flex-end}
+.pk{color:${P.deep};font-size:18px;font-weight:600;letter-spacing:.12em}
+.pcity{color:${P.ink};font-size:46px;font-weight:800;line-height:1.1}
+.par{color:${P.body};font-size:21px;margin-top:4px}
+.parrow{color:${P.teal};font-size:30px;font-weight:800;padding-bottom:12px}
+.hl{position:absolute;top:836px;right:64px;left:64px;font-size:76px;text-align:center;white-space:nowrap}
+.sub{position:absolute;top:952px;right:64px;left:64px;font-size:28px;text-align:center;color:#dff2f2}
+.plane{position:absolute;top:196px;left:56px;width:224px;z-index:3;transform:rotate(-10deg);
+  filter:drop-shadow(0 18px 28px rgba(0,0,0,.4))}
+.hl .lead{color:#fff} .hl .accent{color:#8ff0f0}
+.bens{position:absolute;top:1014px;right:56px;left:56px}
+.pay{bottom:164px}`;
+  const body = `
+<div class="bgfull"><img class="cover" src="data:image/jpeg;base64,${photo}"></div>
+<div class="scrimtop"></div><div class="scrim"></div>
+${copy.plane ? `<img class="plane" data-guard="الطائرة" data-soft="1" src="${await plane(copy.plane)}">` : ''}
+<div class="pass" data-guard="البطاقة">
+  <div class="stub"><div class="stubcode">${copy.toCode}</div><div class="bars"></div></div>
+  <div class="pmain">
+    <div class="prow"><span class="pk">بطاقة صعود</span><span class="pk">SOMADOS</span></div>
+    <div class="prow">
+      <div><div class="pcity">${copy.fromCode}</div><div class="par">${copy.from}</div></div>
+      <div class="parrow">←</div>
+      <div><div class="pcity">${copy.toCode}</div><div class="par">${copy.to}</div></div>
+    </div>
+  </div>
+</div>
+${header(await logo(), copy.label)}
+<div class="hl" data-guard="العنوان" data-fit="76" data-room="952">${headlineHTML(copy.headline)}</div>
+<div class="sub" data-guard="السطر">${copy.sub}</div>
+${benefits(copy.benefits)}
+${await payments()}
+${footer(copy)}`;
+  return shell(size, css, body);
+}
+
+/* ٤١ — إطار داخلي رفيع ونص في القلب */
+export async function inset({ size, photo, copy }) {
+  const css = PHOTO_STACK + `
+.frame{position:absolute;top:56px;right:56px;left:56px;bottom:56px;border:2px solid rgba(255,255,255,.62);border-radius:26px;z-index:3}
+.mid{position:absolute;top:360px;right:110px;left:110px;text-align:center;z-index:4}
+.line{width:96px;height:4px;background:#fff;border-radius:2px;margin:0 auto 26px}
+.glab{color:#e6fbfb;font-size:23px;font-weight:600;letter-spacing:.24em}
+.hl{margin-top:18px;font-size:86px;white-space:nowrap;display:inline-block}
+.hl .lead{color:#fff} .hl .accent{color:#8ff0f0}
+.sub{margin-top:20px;color:#dff2f2;font-size:29px;line-height:1.5}
+.rt{margin-top:26px;display:inline-flex;align-items:center;gap:12px;background:rgba(255,255,255,.18);
+  border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:999px;padding:13px 28px;font-size:23px;font-weight:700}
+.rt i{width:8px;height:8px;border-radius:50%;background:#8ff0f0;display:block}
+.bens{position:absolute;top:1006px;right:56px;left:56px}
+.pay{bottom:168px}`;
+  const body = `
+<div class="bgfull"><img class="cover" src="data:image/jpeg;base64,${photo}"></div>
+<div class="scrimtop"></div><div class="scrim"></div>
+<div class="frame"></div>
+<div class="mid" data-guard="الكتلة">
+  <div class="line"></div>
+  <div class="glab">${copy.label}</div>
+  <div class="hl" data-fit="86" data-room="856">${headlineHTML(copy.headline)}</div>
+  <div class="sub">${copy.sub}</div>
+  <div class="rt">${copy.from}<i></i>${copy.to}</div>
+</div>
+${header(await logo(), '')}
+${benefits(copy.benefits)}
+${await payments()}
+${footer(copy)}`;
+  return shell(size, css, body);
+}
+
+/* ٤٢ — الثلث السفلي: نص كبير محاذٍ لليمين */
+export async function lowerthird({ size, photo, copy }) {
+  const css = PHOTO_STACK + `
+.scrim{height:760px;background:linear-gradient(180deg,rgba(4,44,50,0),rgba(4,44,50,.30) 26%,rgba(4,44,50,.86) 66%,rgba(4,44,50,.96))}
+.glab{position:absolute;top:580px;right:64px;color:#bff0f0;font-size:23px;font-weight:600;letter-spacing:.2em}
+.hl{position:absolute;top:668px;right:64px;left:64px;font-size:88px;text-align:right;white-space:nowrap}
+.hl .lead{color:#fff} .hl .accent{color:#8ff0f0}
+.sub{position:absolute;top:822px;right:64px;left:64px;font-size:30px;text-align:right;color:#dff2f2}
+.rt{position:absolute;top:896px;right:64px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.4);
+  color:#fff;border-radius:999px;padding:13px 28px;font-size:23px;font-weight:700;display:flex;align-items:center;gap:12px}
+.rt i{width:8px;height:8px;border-radius:50%;background:#8ff0f0;display:block}
+.plane{position:absolute;top:186px;left:56px;width:232px;transform:rotate(-10deg);
+  filter:drop-shadow(0 18px 28px rgba(0,0,0,.4))}
+.bens{position:absolute;top:1006px;right:56px;left:56px;justify-content:flex-start}
+.pay{bottom:168px}`;
+  const body = `
+<div class="bgfull"><img class="cover" src="data:image/jpeg;base64,${photo}"></div>
+<div class="scrimtop"></div><div class="scrim"></div>
+${copy.plane ? `<img class="plane" data-guard="الطائرة" data-soft="1" src="${await plane(copy.plane)}">` : ''}
+<div class="glab" data-guard="اللافتة">${copy.label}</div>
+${header(await logo(), '')}
+<div class="hl" data-guard="العنوان" data-fit="92" data-room="952">${headlineHTML(copy.headline)}</div>
+<div class="sub" data-guard="السطر">${copy.sub}</div>
+<div class="rt" data-guard="المسار">${copy.from}<i></i>${copy.to}</div>
+${benefits(copy.benefits)}
+${await payments()}
+${footer(copy)}`;
+  return shell(size, css, body);
+}
+
+/* ٤٣ — إسفين قطري شفّاف يحمل النص */
+export async function wedge({ size, photo, copy }) {
+  const css = PHOTO_STACK + `
+.wg{position:absolute;inset:0;background:linear-gradient(112deg,rgba(0,105,107,.94) 0%,rgba(0,105,107,.86) 38%,rgba(0,105,107,0) 62%);z-index:3}
+.wgline{position:absolute;top:0;bottom:0;right:50%;width:5px;background:rgba(255,255,255,.5);
+  transform:rotate(22deg) translateX(46px);z-index:4}
+.glab{position:absolute;top:198px;right:64px;color:#bff0f0;font-size:22px;font-weight:600;letter-spacing:.2em;z-index:5}
+.hl{position:absolute;top:266px;right:64px;left:420px;font-size:72px;line-height:1.22;text-align:right;z-index:5}
+.hl > span{display:inline}
+.hl .lead{color:#fff} .hl .accent{color:#8ff0f0}
+.sub{position:absolute;top:560px;right:64px;left:440px;font-size:28px;text-align:right;color:#dff2f2;z-index:5}
+.rt{position:absolute;top:700px;right:64px;background:#fff;color:${P.ink};border-radius:999px;padding:13px 28px;
+  font-size:23px;font-weight:700;display:flex;align-items:center;gap:12px;z-index:5}
+.rt i{width:8px;height:8px;border-radius:50%;background:${P.teal};display:block}
+.plane{position:absolute;top:822px;right:96px;width:236px;z-index:5;transform:rotate(-9deg);
+  filter:drop-shadow(0 18px 28px rgba(0,0,0,.4))}
+.bens{position:absolute;top:1006px;right:56px;left:56px}
+.pay{bottom:168px}`;
+  const body = `
+<div class="bgfull"><img class="cover" src="data:image/jpeg;base64,${photo}"></div>
+<div class="wg"></div><div class="wgline"></div><div class="scrim"></div>
+<div class="glab" data-guard="اللافتة">${copy.label}</div>
+${header(await logo(), '')}
+<div class="hl" data-guard="العنوان" data-fit="72" data-room="600" data-tall="300">${headlineHTML(copy.headline)}</div>
+<div class="sub" data-guard="السطر">${copy.sub}</div>
+<div class="rt" data-guard="المسار">${copy.from}<i></i>${copy.to}</div>
+${copy.plane ? `<img class="plane" data-guard="الطائرة" data-soft="1" src="${await plane(copy.plane)}">` : ''}
+${benefits(copy.benefits)}
+${await payments()}
+${footer(copy)}`;
+  return shell(size, css, body);
+}
+
+/* ٤٤ — شريط ورقي مائل يقطع الصورة */
+export async function banner({ size, photo, copy }) {
+  const css = PHOTO_STACK + `
+.bn{position:absolute;top:392px;right:-40px;left:-40px;height:268px;background:#fff;transform:rotate(-5deg);
+  box-shadow:0 26px 54px rgba(0,0,0,.34);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;z-index:4}
+.bnlab{color:${P.deep};font-size:21px;font-weight:600;letter-spacing:.2em}
+.hl{font-size:78px;white-space:nowrap}
+.bnrt{position:absolute;top:706px;right:50%;transform:translateX(50%) rotate(-5deg);background:${P.ink};color:#fff;
+  border-radius:999px;padding:13px 30px;font-size:24px;font-weight:700;display:flex;align-items:center;gap:12px;z-index:5}
+.bnrt i{width:8px;height:8px;border-radius:50%;background:${P.teal};display:block}
+.sub{position:absolute;top:812px;right:64px;left:64px;font-size:29px;text-align:center;color:#dff2f2}
+.plane{position:absolute;top:196px;left:52px;width:230px;z-index:3;transform:rotate(-11deg);
+  filter:drop-shadow(0 18px 28px rgba(0,0,0,.4))}
+.bens{position:absolute;top:1006px;right:56px;left:56px}
+.pay{bottom:168px}`;
+  const body = `
+<div class="bgfull"><img class="cover" src="data:image/jpeg;base64,${photo}"></div>
+<div class="scrimtop"></div><div class="scrim"></div>
+${copy.plane ? `<img class="plane" data-guard="الطائرة" data-soft="1" src="${await plane(copy.plane)}">` : ''}
+<div class="bn" data-guard="الشريط">
+  <div class="bnlab">${copy.label}</div>
+  <div class="hl" data-fit="78" data-room="900">${headlineHTML(copy.headline)}</div>
+</div>
+<div class="bnrt" data-guard="المسار">${copy.from}<i></i>${copy.to}</div>
+${header(await logo(), '')}
+<div class="sub" data-guard="السطر">${copy.sub}</div>
+${benefits(copy.benefits)}
+${await payments()}
+${footer(copy)}`;
+  return shell(size, css, body);
+}
+
+export const LAYOUTS = { glassduo, sheet, glasspanel, medallion, duotone, passover, inset, lowerthird, wedge, banner, destination, boarding, arches, fan, ticket, windowSeat, diagonal, grid, routemap, overlay, split, panorama, polaroids, quad, wave, passport, sidebar, bigcircle, mosaic, postertype, filmstrip, board, stack, duo, glass, prism, postcard, marquee, topo, columns, blob, roundtrip, viewfinder, halfdome };
 
 export async function buildPostHTML({ layout, size, photos, copy }) {
   const fn = LAYOUTS[layout];

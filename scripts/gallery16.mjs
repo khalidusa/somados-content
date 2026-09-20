@@ -62,6 +62,16 @@ const plans = [
   ['32-roundtrip', 'roundtrip', [I], b(V, { fromCode: 'BGW', toCode: 'IST', headline: fillPair(HEADLINES.offer[1], V), sub: fill(SUBS.route[2], V) })],
   ['33-viewfinder', 'viewfinder', [I2], b(V, { label: 'وجهة اليوم', headline: fillPair(HEADLINES.offer[0], V) })],
   ['34-halfdome', 'halfdome', [A], b(VA, { headline: fillPair(HEADLINES.offer[2], VA), sub: fill(SUBS.route[0], VA), plane: 'plane-c.png' })],
+  ['35-glassduo', 'glassduo', [A], b(VA, { headline: fillPair(HEADLINES.offer[0], VA), sub: fill(SUBS.route[0], VA), plane: 'plane-d.png' })],
+  ['36-sheet', 'sheet', [I2], b(V, { headline: fillPair(HEADLINES.offer[1], V), sub: fill(SUBS.route[1], V), plane: 'plane-a.png' })],
+  ['37-glasspanel', 'glasspanel', [A3], b(VA, { headline: fillPair(HEADLINES.offer[3], VA), sub: fill(SUBS.route[3], VA), plane: 'plane-c.png' })],
+  ['38-medallion', 'medallion', [I], b(V, { headline: fillPair(HEADLINES.destination[0], V), sub: fill(SUBS.route[2], V) })],
+  ['39-duotone', 'duotone', [I2], b(V, { headline: fillPair(HEADLINES.offer[1], V), sub: fill(SUBS.route[0], V), plane: 'plane-b.png' })],
+  ['40-passover', 'passover', [A], b(VA, { fromCode: 'BGW', toCode: 'AYT', headline: fillPair(HEADLINES.offer[2], VA), sub: fill(SUBS.route[1], VA), plane: 'plane-a.png' })],
+  ['41-inset', 'inset', [A3], b(VA, { headline: fillPair(HEADLINES.destination[1], VA), sub: fill(SUBS.route[0], VA) })],
+  ['42-lowerthird', 'lowerthird', [I2], b(V, { headline: fillPair(HEADLINES.offer[0], V), sub: fill(SUBS.route[3], V), plane: 'plane-d.png' })],
+  ['43-wedge', 'wedge', [A], b(VA, { headline: fillPair(HEADLINES.offer[4], VA), sub: fill(SUBS.route[2], VA), plane: 'plane-c.png' })],
+  ['44-banner', 'banner', [I], b(V, { headline: fillPair(HEADLINES.offer[1], V), sub: fill(SUBS.route[1], V), plane: 'plane-a.png' })],
   ['24-duo', 'duo', [I3, A], b({ from: 'إسطنبول', to: 'أنطاليا' }, { headline: fillPair(HEADLINES.destination[3], { from: 'إسطنبول', to: 'أنطاليا' }) })]
 ];
 
