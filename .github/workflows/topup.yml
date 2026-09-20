@@ -23,6 +23,9 @@ concurrency:
 jobs:
   topup:
     runs-on: ubuntu-latest
+    # لا يعمل تلقائياً حتى يُضبط المتغيّر PIPELINE_LIVE=1 في إعدادات الريبو.
+    # التشغيل اليدوي (workflow_dispatch) يعمل دائماً للتجربة.
+    if: github.event_name == 'workflow_dispatch' || vars.PIPELINE_LIVE == '1'
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
