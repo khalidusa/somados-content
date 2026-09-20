@@ -20,15 +20,15 @@ export async function fontFaceCSS() {
   const files = (await readdir(FONT_DIR)).filter(f => f.endsWith('.woff2'));
   const parts = [];
   for (const f of files) {
-    const m = f.match(/^(\w+)-(\d+)-(\w+)\.woff2$/);
+    const m = f.match(/^(\w+)-(\d+|var)-(\w+)\.woff2$/);   // 'var' = خط متغيّر بمحور وزن واحد
     if (!m) continue;
     const [, fam, weight, subset] = m;
-    const family = fam === 'arefruqaa' ? 'Aref Ruqaa' : 'Tajawal';
+    const family = { arefruqaa: 'Aref Ruqaa', notokufi: 'Noto Kufi Arabic', tajawal: 'Tajawal' }[fam] ?? 'Tajawal';
     const b64 = (await readFile(path.join(FONT_DIR, f))).toString('base64');
     const range = subset === 'arabic'
       ? 'U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0898-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC'
       : 'U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD';
-    parts.push(`@font-face{font-family:'${family}';font-style:normal;font-weight:${weight};font-display:block;src:url(data:font/woff2;base64,${b64}) format('woff2');unicode-range:${range};}`);
+    parts.push(`@font-face{font-family:'${family}';font-style:normal;font-weight:${weight === 'var' ? '100 900' : weight};font-display:block;src:url(data:font/woff2;base64,${b64}) format('woff2');unicode-range:${range};}`);
   }
   fontCache = parts.join('\n');
   return fontCache;
