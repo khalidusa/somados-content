@@ -1759,13 +1759,13 @@ ${footer(copy)}`;
 /* ٤٣ — إسفين قطري شفّاف يحمل النص */
 export async function wedge({ size, photo, copy }) {
   const css = PHOTO_STACK + `
-.wg{position:absolute;inset:0;background:linear-gradient(112deg,rgba(0,105,107,.94) 0%,rgba(0,105,107,.86) 38%,rgba(0,105,107,0) 62%);z-index:3}
+.wg{position:absolute;inset:0;background:linear-gradient(112deg,rgba(3,58,64,.96) 0%,rgba(3,58,64,.90) 40%,rgba(3,58,64,0) 64%);z-index:3}
 .wgline{position:absolute;top:0;bottom:0;right:50%;width:5px;background:rgba(255,255,255,.5);
   transform:rotate(22deg) translateX(46px);z-index:4}
-.glab{position:absolute;top:198px;right:64px;color:#bff0f0;font-size:22px;font-weight:600;letter-spacing:.2em;z-index:5}
+.glab{position:absolute;top:198px;right:64px;color:#9fe8e8;font-size:22px;font-weight:600;letter-spacing:.2em;z-index:5}
 .hl{position:absolute;top:266px;right:64px;left:420px;font-size:72px;line-height:1.22;text-align:right;z-index:5}
 .hl > span{display:inline}
-.hl .lead{color:#fff} .hl .accent{color:#8ff0f0}
+.hl .lead{color:#fff} .hl .accent{color:#6df0f0}
 .sub{position:absolute;top:560px;right:64px;left:440px;font-size:28px;text-align:right;color:#dff2f2;z-index:5}
 .rt{position:absolute;top:700px;right:64px;background:#fff;color:${P.ink};border-radius:999px;padding:13px 28px;
   font-size:23px;font-weight:700;display:flex;align-items:center;gap:12px;z-index:5}
