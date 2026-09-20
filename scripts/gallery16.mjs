@@ -52,6 +52,16 @@ const plans = [
   ['22-board', 'board', [I2], b(V, { headline: fillPair(HEADLINES.offer[1], V),
       rows: [{ city: 'إسطنبول', when: 'يومياً', status: 'متاح' }, { city: 'أنطاليا', when: 'يومياً', status: 'متاح' }, { city: 'أنقرة', when: 'أسبوعياً', status: 'متاح' }] })],
   ['23-stack', 'stack', [A, I2], b(VA, { headline: fillPair(HEADLINES.offer[3], VA), sub: fill(SUBS.route[3], VA) })],
+  ['25-glass', 'glass', [A], b(VA, { headline: fillPair(HEADLINES.offer[0], VA), sub: fill(SUBS.route[0], VA), plane: 'plane-d.png' })],
+  ['26-prism', 'prism', [I2], b(V, { headline: fillPair(HEADLINES.offer[1], V) })],
+  ['27-postcard', 'postcard', [A], b(VA, { label: 'بطاقة من أنطاليا', headline: fillPair(HEADLINES.destination[1], VA), sub: fill(SUBS.route[3], VA), photo2: A3 })],
+  ['28-marquee', 'marquee', [I2], b(V, { ribbon: 'عروض يومية', headline: fillPair(HEADLINES.offer[4], V), sub: fill(SUBS.route[1], V) })],
+  ['29-topo', 'topo', [K2, A], b({ from: 'أنقرة', to: 'أنطاليا' }, { headline: fillPair(HEADLINES.destination[3], { from: 'أنقرة', to: 'أنطاليا' }), sub: SUBS.multi[0] })],
+  ['30-columns', 'columns', [A, I2, K], b(V, { headline: fillPair(HEADLINES.multi[1], V) })],
+  ['31-blob', 'blob', [A3], b(VA, { headline: fillPair(HEADLINES.destination[0], VA) })],
+  ['32-roundtrip', 'roundtrip', [I], b(V, { fromCode: 'BGW', toCode: 'IST', headline: fillPair(HEADLINES.offer[1], V), sub: fill(SUBS.route[2], V) })],
+  ['33-viewfinder', 'viewfinder', [I2], b(V, { label: 'وجهة اليوم', headline: fillPair(HEADLINES.offer[0], V) })],
+  ['34-halfdome', 'halfdome', [A], b(VA, { headline: fillPair(HEADLINES.offer[2], VA), sub: fill(SUBS.route[0], VA), plane: 'plane-c.png' })],
   ['24-duo', 'duo', [I3, A], b({ from: 'إسطنبول', to: 'أنطاليا' }, { headline: fillPair(HEADLINES.destination[3], { from: 'إسطنبول', to: 'أنطاليا' }) })]
 ];
 
