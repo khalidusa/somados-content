@@ -1,0 +1,48 @@
+name: تعبئة طابور Buffer
+
+# كل ٣ ساعات: تأخير GitHub في تنفيذ الجدولة (١٠–٦٠ دقيقة) لا يضرّ هنا،
+# لأن المنشورات تُجدول لأيام قادمة لا للحظة التشغيل.
+on:
+  schedule:
+    - cron: '35 */3 * * *'
+  workflow_dispatch:
+    inputs:
+      dry:
+        description: 'تجربة بلا إرسال'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: somados-topup
+  cancel-in-progress: false
+
+jobs:
+  topup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --omit=optional --ignore-scripts
+
+      - name: تعبئة الطابور
+        env:
+          BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+          PAGES_BASE_URL: ${{ vars.PAGES_BASE_URL }}
+          TARGET_QUEUE: ${{ vars.TARGET_QUEUE }}
+        run: node src/topup.mjs ${{ inputs.dry && '--dry-run' || '' }}
+
+      - name: حفظ سجل المجدول
+        run: |
+          git config user.name  "somados-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add data/posted.json
+          git diff --staged --quiet || git commit -m "ops: سجل المنشورات المجدولة"
+          git push

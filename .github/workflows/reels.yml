@@ -1,10 +1,10 @@
-name: بناء صور الشهر
+name: بناء ريلز الشهر
 
-# الزر: Actions ← بناء صور الشهر ← Run workflow
+# الزر: Actions ← بناء ريلز الشهر ← Run workflow
 on:
   # كل ٣ ساعات: شهر مكتمل يخرج في ثوانٍ، وتشغيل منقطع يُستأنف من حيث وقف.
   schedule:
-    - cron: '20 */3 * * *'
+    - cron: '50 */3 * * *'
   workflow_dispatch:
     inputs:
       month:
@@ -21,19 +21,22 @@ permissions:
   contents: write
 
 concurrency:
-  group: somados-generate
+  group: somados-reels
   cancel-in-progress: false
 
 jobs:
-  generate:
+  reels:
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
+
+      - name: ffmpeg
+        run: ffmpeg -version >/dev/null 2>&1 || sudo apt-get update && sudo apt-get install -y ffmpeg
 
       - run: npm ci
 
@@ -54,7 +57,7 @@ jobs:
           PAGES_BASE_URL: ${{ vars.PAGES_BASE_URL }}
         run: npm run doctor
 
-      - name: بناء الشهر
+      - name: بناء الريلز
         env:
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
@@ -68,14 +71,14 @@ jobs:
           CF_ACCOUNT_ID_5: ${{ secrets.CF_ACCOUNT_ID_5 }}
           CF_API_TOKEN_5: ${{ secrets.CF_API_TOKEN_5 }}
           MONTH: ${{ inputs.month }}
-        run: node src/generate.mjs ${{ inputs.force && '--force' || '' }}
+        run: node src/reels.mjs ${{ inputs.force && '--force' || '' }}
 
       - name: حفظ الخطة
         run: |
           git config user.name  "somados-bot"
           git config user.email "bot@users.noreply.github.com"
           git add data
-          git diff --staged --quiet || git commit -m "محتوى: صور الشهر"
+          git diff --staged --quiet || git commit -m "محتوى: ريلز الشهر"
           git push
 
       - name: نشر الوسائط على فرع media

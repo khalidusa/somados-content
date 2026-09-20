@@ -2,13 +2,20 @@
   "name": "somados-content",
   "version": "0.1.0",
   "private": true,
-  "description": "نظام نشر تلقائي يومي لسومادوس — صورة 10:00 وريل 19:00 بتوقيت بغداد",
+  "description": "محرك المحتوى اليومي لسومادوس — صورة 10:00 وريل 19:00 بتوقيت بغداد، على فيسبوك وانستقرام عبر Buffer",
   "scripts": {
-    "test": "node scripts/test-schedule.js && node scripts/test-matrix.js",
-    "test:schedule": "node scripts/test-schedule.js",
-    "test:matrix": "node scripts/test-matrix.js"
+    "doctor": "node src/doctor.mjs",
+    "generate": "node src/generate.mjs",
+    "reels": "node src/reels.mjs",
+    "topup": "node src/topup.mjs",
+    "preview": "node src/preview.mjs",
+    "usage": "node src/usage.mjs"
   },
   "dependencies": {
+    "@imgly/background-removal-node": "^1.4.5",
     "puppeteer": "^24.43.1"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

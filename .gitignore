@@ -1,12 +1,13 @@
 node_modules/
 .env
 out/
+.tmp-reel/
+legacy/
+.DS_Store
+posts/
+# رخصة Pixabay تمنع إعادة نشر ملف الصوت مفرداً في ريبو عام —
+# الريلز المُصدَّر يحتويها بلا مشكلة. المقاطع تأتي وقت التشغيل من somados-audio الخاص.
 assets/music/
-*.mp4
-
-# الوسائط المُنتَجة تعيش على فرع media وحده — main كود خالص،
-# وتاريخ git لا ينسى ملفاً حُذف، فبقاؤها هنا يضخّم المستودع للأبد
-content/images/
-content/reels/
-content/raw/
-content/*.html
+assets/mockup/
+content/
+legacy/

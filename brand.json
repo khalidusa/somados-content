@@ -1,0 +1,47 @@
+{
+  "business": {
+    "name": "سومادوس",
+    "nameLatin": "SOMADOS",
+    "tagline": "تذاكر طيران · فنادق · تأشيرات · إقامة تركية",
+    "website": "https://somados.com",
+    "siteDisplay": "somados.com",
+    "whatsapp": "+1 240 501 0464",
+    "email": "hello@somados.com",
+    "instagram": "somadoscom",
+    "facebook": "somadoscom"
+  },
+  "palette": {
+    "teal": "#00a6a6",
+    "tealDeep": "#00696b",
+    "tealDark": "#04353d",
+    "ink": "#0b1416",
+    "paper": "#f2ede3",
+    "mist": "#F5F5F7",
+    "white": "#FFFFFF"
+  },
+  "font": { "family": "Tajawal", "weights": [200, 300, 400, 500, 700, 800, 900] },
+  "services": [
+    { "id": "tickets", "name": "تذاكر الطيران", "blurb": "رحلات بين العراق وتركيا وبقية الوجهات، بأسرع مسار وأوضح مواعيد." },
+    { "id": "hotels",  "name": "حجز الفنادق",  "blurb": "فنادق مختارة قرب المركز، تُحجز مع التذكرة في طلب واحد." },
+    { "id": "visas",   "name": "التأشيرات",     "blurb": "متابعة كاملة للطلب من التقديم حتى صدور التأشيرة." },
+    { "id": "ikamet",  "name": "الإقامة التركية", "blurb": "تجديد وتقديم الإقامة السياحية بمتابعة من فريقنا في تركيا." }
+  ],
+  "proofPoints": [
+    "حجز مؤكد بلا وسيط",
+    "متابعة على واتساب حتى الإقلاع",
+    "مواعيد محدّثة كل يوم",
+    "فريق في بغداد وإسطنبول",
+    "تعديل الحجز بمكالمة واحدة"
+  ],
+  "rules": {
+    "noPricesInAds": true,
+    "noVisaPricesAnywhere": true,
+    "language": "ar",
+    "pricingPolicy": "الأسعار تتغير كل ساعات وتظهر على الموقع فقط — لا يُكتب أي سعر في الإعلان."
+  },
+  "schedule": {
+    "timezone": "Asia/Baghdad",
+    "postHour": 10,
+    "reelHour": 19
+  }
+}

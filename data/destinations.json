@@ -1,0 +1,121 @@
+{
+  "IST": {
+    "ar": "إسطنبول",
+    "latin": "ISTANBUL",
+    "country": "tr",
+    "q": [
+      "Istanbul Galata tower day",
+      "Bosphorus bridge Istanbul",
+      "Hagia Sophia exterior",
+      "Istanbul skyline sunset",
+      "Istanbul Bosphorus boats",
+      "Ortakoy mosque Istanbul",
+      "Maiden tower Istanbul"
+    ]
+  },
+  "ESB": {
+    "ar": "أنقرة",
+    "latin": "ANKARA",
+    "country": "tr",
+    "q": [
+      "Ankara Anitkabir",
+      "Ankara Kocatepe mosque",
+      "Ankara castle day",
+      "Ankara city skyline",
+      "Ankara aerial view"
+    ]
+  },
+  "AYT": {
+    "ar": "أنطاليا",
+    "latin": "ANTALYA",
+    "country": "tr",
+    "q": [
+      "Antalya marina",
+      "Antalya old harbour",
+      "Kaleici Antalya",
+      "Antalya coast turquoise",
+      "Duden waterfall Antalya",
+      "Antalya beach cliffs"
+    ]
+  },
+  "SZF": {
+    "ar": "سامسون",
+    "latin": "SAMSUN",
+    "country": "tr",
+    "q": [
+      "Samsun Turkey coast",
+      "Samsun city",
+      "Black Sea coast Turkey green",
+      "Amisos hill Samsun"
+    ]
+  },
+  "BGW": {
+    "ar": "بغداد",
+    "latin": "BAGHDAD",
+    "country": "iq",
+    "q": [
+      "Baghdad Tigris river day",
+      "Baghdad skyline",
+      "Baghdad bridge",
+      "Abu Nuwas Baghdad",
+      "Iraq palm trees river"
+    ]
+  },
+  "EBL": {
+    "ar": "أربيل",
+    "latin": "ERBIL",
+    "country": "iq",
+    "q": [
+      "Erbil citadel day",
+      "Erbil city",
+      "Kurdistan mountains green",
+      "Erbil skyline",
+      "Kurdistan valley spring"
+    ]
+  },
+  "BSR": {
+    "ar": "البصرة",
+    "latin": "BASRA",
+    "country": "iq",
+    "q": [
+      "Basra corniche",
+      "Shatt al-Arab river",
+      "Iraq marshes boat",
+      "Basra city",
+      "Iraq date palms"
+    ]
+  },
+  "NJF": {
+    "ar": "النجف",
+    "latin": "NAJAF",
+    "country": "iq",
+    "q": [
+      "Najaf city",
+      "Iraq desert dunes golden",
+      "Iraq palm grove",
+      "Kufa Iraq"
+    ]
+  },
+  "ISU": {
+    "ar": "السليمانية",
+    "latin": "SULAYMANIYAH",
+    "country": "iq",
+    "q": [
+      "Sulaymaniyah city",
+      "Azmar mountain",
+      "Dukan lake",
+      "Kurdistan mountains sunny"
+    ]
+  },
+  "JOURNEY": {
+    "ar": "الرحلة",
+    "latin": "JOURNEY",
+    "country": "--",
+    "q": [
+      "airplane wing above clouds",
+      "airplane window clouds day",
+      "airport terminal window sunlight",
+      "runway airplane takeoff day"
+    ]
+  }
+}

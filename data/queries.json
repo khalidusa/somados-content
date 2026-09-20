@@ -1,0 +1,162 @@
+{
+  "_note": "استعلامات الجو والوقت، لا 'travel/tourism/landmark' — تلك تنتقي البطاقات البريدية",
+  "destinations": {
+    "IST": {
+      "ar": "إسطنبول",
+      "q": [
+        "Bosphorus fog",
+        "Istanbul ferry morning",
+        "Galata rooftops dusk",
+        "Istanbul tram rain",
+        "Balat houses",
+        "Eminonu seagull",
+        "Istanbul snow",
+        "Istanbul aerial"
+      ]
+    },
+    "ESB": {
+      "ar": "أنقرة",
+      "q": [
+        "Ankara castle",
+        "Ankara aerial",
+        "Anitkabir",
+        "Hamamonu",
+        "Ankara autumn",
+        "Ankara night"
+      ]
+    },
+    "AYT": {
+      "ar": "أنطاليا",
+      "q": [
+        "Kaleici",
+        "Antalya old harbour",
+        "Antalya cliffs",
+        "Duden waterfall",
+        "Antalya marina dusk",
+        "turquoise coast Turkey"
+      ]
+    },
+    "SZF": {
+      "ar": "سامسون",
+      "q": [
+        "Samsun coast",
+        "Black Sea coast Turkey",
+        "Black Sea fog",
+        "Amisos hill"
+      ]
+    },
+    "BGW": {
+      "ar": "بغداد",
+      "q": [
+        "Baghdad Tigris",
+        "Tigris river",
+        "Baghdad night",
+        "Abu Nuwas Baghdad",
+        "Iraq palm river"
+      ]
+    },
+    "EBL": {
+      "ar": "أربيل",
+      "q": [
+        "Erbil citadel",
+        "Erbil",
+        "Kurdistan mountains spring",
+        "Kurdistan landscape"
+      ]
+    },
+    "BSR": {
+      "ar": "البصرة",
+      "q": [
+        "Shatt al-Arab",
+        "Mesopotamian marshes",
+        "Iraq marshes",
+        "Iraq boat river",
+        "date palms Iraq"
+      ]
+    },
+    "NJF": {
+      "ar": "النجف",
+      "q": [
+        "Iraq desert",
+        "Iraq date palm grove",
+        "desert dusk Iraq"
+      ]
+    },
+    "KIK": {
+      "ar": "كركوك",
+      "q": []
+    },
+    "ISU": {
+      "ar": "السليمانية",
+      "q": [
+        "Sulaymaniyah",
+        "Azmar mountain",
+        "Dukan lake",
+        "Kurdistan snow"
+      ]
+    },
+    "JOURNEY": {
+      "ar": "الرحلة",
+      "q": [
+        "airplane window clouds",
+        "airplane wing sky",
+        "runway lights night",
+        "airport terminal window morning",
+        "airplane window sunrise",
+        "empty airport gate"
+      ]
+    }
+  },
+  "visas": {
+    "sa": [
+      "AlUla Saudi Arabia",
+      "Riyadh skyline day",
+      "Saudi desert golden"
+    ],
+    "jo": [
+      "Petra Jordan treasury",
+      "Wadi Rum desert",
+      "Amman Jordan city"
+    ],
+    "eg": [
+      "Giza pyramids day",
+      "Nile river Cairo",
+      "Luxor temple Egypt"
+    ],
+    "ae": [
+      "Dubai skyline day",
+      "Burj Khalifa day",
+      "Abu Dhabi grand mosque"
+    ],
+    "om": [
+      "Muscat Oman mosque",
+      "Wadi Shab Oman",
+      "Oman mountains day"
+    ],
+    "id": [
+      "Bali rice terrace",
+      "Bali beach day",
+      "Indonesia volcano landscape"
+    ],
+    "cn": [
+      "Great Wall of China",
+      "Guilin karst mountains",
+      "Shanghai skyline day"
+    ],
+    "ge": [
+      "Tbilisi old town day",
+      "Kazbegi church Georgia",
+      "Georgia mountains green"
+    ],
+    "th": [
+      "Bangkok grand palace",
+      "Thailand island beach",
+      "Phang Nga bay"
+    ],
+    "iq": [
+      "Baghdad Tigris river day",
+      "Erbil citadel day",
+      "Iraq marshes boat"
+    ]
+  }
+}
