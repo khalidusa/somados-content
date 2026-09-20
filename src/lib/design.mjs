@@ -27,7 +27,7 @@ export const P = {
   deep: '#00696b',      // النص الصغير — 5.2:1
   dark: '#04353d',
   ink: '#0b1416',
-  body: '#5a6a6c',
+  body: '#000000',      // خالد: النصوص الناعمة بالأسود النقي لا الرمادي
   mist: '#F1F8F8',
   line: '#E2EEEE'
 };
@@ -140,13 +140,13 @@ body{font-family:'Noto Kufi Arabic','Tajawal',sans-serif;-webkit-font-smoothing:
 .pay{position:absolute;right:64px;left:64px;bottom:196px;display:flex;flex-direction:column;gap:14px;
   padding-top:26px;border-top:1px solid ${P.line}}
 .marks{display:flex;align-items:center;gap:26px;direction:ltr;justify-content:flex-end}
-.mark{height:38px;color:#22383a;display:flex;align-items:center}
+.mark{height:38px;color:#000;display:flex;align-items:center}
 .mark svg{height:100%;width:auto;display:block}
 .msep{width:1px;height:30px;background:${P.line};display:block;margin:0 4px}
 .markico{width:30px;height:30px;color:${P.teal};display:block}
 .markico svg{width:100%;height:100%}
-.marktx{color:#3f5051;font-size:22px;font-weight:500;margin-left:6px}
-.curr{color:${P.body};font-size:21px;font-weight:400;text-align:right}
+.marktx{color:#000;font-size:22px;font-weight:500;margin-left:6px}
+.curr{color:#000;font-size:21px;font-weight:400;text-align:right}
 .foot{position:absolute;right:64px;left:64px;bottom:72px;display:flex;align-items:center;justify-content:space-between}
 .sitepill{background:${P.teal};color:#fff;font-size:30px;font-weight:700;padding:16px 36px;border-radius:999px;
   box-shadow:0 14px 30px rgba(0,166,166,.28)}
@@ -158,7 +158,7 @@ body{font-family:'Noto Kufi Arabic','Tajawal',sans-serif;-webkit-font-smoothing:
 .hl .accent{color:${P.teal}}
 .bens{display:flex;align-items:center;justify-content:center;gap:14px}
 .ben{display:flex;align-items:center;gap:9px;background:#fff;border:1px solid ${P.line};border-radius:999px;
-  padding:13px 24px;color:#2f4142;font-size:23px;font-weight:500;box-shadow:0 8px 20px rgba(6,60,62,.08)}
+  padding:13px 24px;color:#000;font-size:23px;font-weight:500;box-shadow:0 8px 20px rgba(6,60,62,.08)}
 .benico{width:20px;height:20px;color:${P.teal};display:block;flex:none}
 .benico svg{width:100%;height:100%}
 .sub{color:${P.body};font-weight:400;line-height:1.55}
@@ -1517,7 +1517,8 @@ export async function sheet({ size, photo, copy }) {
   const css = PHOTO_STACK + `
 .scrim{height:300px}
 .curve{position:absolute;right:0;left:0;top:560px;height:150px;z-index:3}
-.panel{position:absolute;right:0;left:0;top:700px;bottom:0;background:#fff;z-index:3}
+.panel{position:absolute;right:0;left:0;top:700px;bottom:0;z-index:3;
+  background:linear-gradient(180deg,#ffffff 0%,#f4fcfc 44%,#dcf4f4 100%)}
 .ben{background:${P.mist};border-color:${P.line};color:#2f4142}
 .benico{color:${P.teal}} .mark{color:#22383a} .marktx{color:#3f5051} .curr{color:${P.body}}
 .bio{color:${P.deep}} .bioico{color:${P.teal}} .pay{border-top-color:${P.line}}
@@ -1618,17 +1619,17 @@ export async function duotone({ size, photo, copy }) {
 .bgfull img{filter:grayscale(1) contrast(1.05)}
 .duo1{position:absolute;inset:0;background:${P.dark};mix-blend-mode:multiply;opacity:.9}
 .duo2{position:absolute;inset:0;background:${P.teal};mix-blend-mode:lighten;opacity:.42}
-.giant{position:absolute;top:300px;right:64px;left:64px;color:#fff;font-weight:900;font-size:150px;
-  line-height:.98;text-align:center;white-space:nowrap;text-shadow:0 20px 50px rgba(0,0,0,.35)}
-.rule{position:absolute;top:492px;right:340px;left:340px;height:6px;background:#fff;border-radius:3px}
-.hl{position:absolute;top:548px;right:64px;left:64px;font-size:62px;text-align:center;white-space:nowrap}
+.giant{position:absolute;top:226px;right:64px;left:64px;color:#fff;font-weight:900;font-size:132px;
+  line-height:1;text-align:center;white-space:nowrap;text-shadow:0 20px 50px rgba(0,0,0,.4)}
+.rule{position:absolute;top:418px;right:360px;left:360px;height:6px;background:#8ff0f0;border-radius:3px}
+.hl{position:absolute;top:468px;right:64px;left:64px;font-size:58px;text-align:center;white-space:nowrap}
 .hl .lead{color:#fff} .hl .accent{color:#8ff0f0}
-.sub{position:absolute;top:660px;right:64px;left:64px;font-size:29px;text-align:center;color:#dff5f5}
-.rt{position:absolute;top:740px;right:50%;transform:translateX(50%);background:#fff;color:${P.ink};border-radius:999px;
+.sub{position:absolute;top:572px;right:64px;left:64px;font-size:29px;text-align:center;color:#eafafa}
+.rt{position:absolute;top:648px;right:50%;transform:translateX(50%);background:#fff;color:${P.ink};border-radius:999px;
   padding:13px 30px;font-size:24px;font-weight:700;display:flex;align-items:center;gap:12px}
 .rt i{width:8px;height:8px;border-radius:50%;background:${P.teal};display:block}
-.plane{position:absolute;top:788px;right:50%;width:360px;transform:translateX(50%);
-  filter:drop-shadow(0 20px 30px rgba(0,0,0,.4))}
+.plane{position:absolute;top:748px;right:50%;width:340px;transform:translateX(50%);
+  filter:drop-shadow(0 20px 30px rgba(0,0,0,.45))}
 .bens{position:absolute;top:1006px;right:56px;left:56px}
 .pay{bottom:168px}`;
   const body = `
@@ -1662,8 +1663,9 @@ export async function passover({ size, photo, copy }) {
 .pcity{color:${P.ink};font-size:46px;font-weight:800;line-height:1.1}
 .par{color:${P.body};font-size:21px;margin-top:4px}
 .parrow{color:${P.teal};font-size:30px;font-weight:800;padding-bottom:12px}
+.scrim{height:820px;background:linear-gradient(180deg,rgba(3,40,46,0),rgba(3,40,46,.46) 26%,rgba(3,40,46,.88) 62%,rgba(3,40,46,.97))}
 .hl{position:absolute;top:836px;right:64px;left:64px;font-size:76px;text-align:center;white-space:nowrap}
-.sub{position:absolute;top:952px;right:64px;left:64px;font-size:28px;text-align:center;color:#dff2f2}
+.sub{position:absolute;top:952px;right:64px;left:64px;font-size:28px;text-align:center;color:#f0fbfb}
 .plane{position:absolute;top:196px;left:56px;width:224px;z-index:3;transform:rotate(-10deg);
   filter:drop-shadow(0 18px 28px rgba(0,0,0,.4))}
 .hl .lead{color:#fff} .hl .accent{color:#8ff0f0}
@@ -1697,12 +1699,14 @@ ${footer(copy)}`;
 export async function inset({ size, photo, copy }) {
   const css = PHOTO_STACK + `
 .frame{position:absolute;top:56px;right:56px;left:56px;bottom:56px;border:2px solid rgba(255,255,255,.62);border-radius:26px;z-index:3}
+.midbg{position:absolute;top:300px;right:70px;left:70px;height:560px;border-radius:40px;z-index:3;
+  background:radial-gradient(60% 60% at 50% 50%,rgba(3,40,46,.86),rgba(3,40,46,.55) 70%,rgba(3,40,46,0))}
 .mid{position:absolute;top:360px;right:110px;left:110px;text-align:center;z-index:4}
 .line{width:96px;height:4px;background:#fff;border-radius:2px;margin:0 auto 26px}
 .glab{color:#e6fbfb;font-size:23px;font-weight:600;letter-spacing:.24em}
 .hl{margin-top:18px;font-size:86px;white-space:nowrap;display:inline-block}
 .hl .lead{color:#fff} .hl .accent{color:#8ff0f0}
-.sub{margin-top:20px;color:#dff2f2;font-size:29px;line-height:1.5}
+.sub{margin-top:20px;color:#f2fcfc;font-size:29px;line-height:1.5}
 .rt{margin-top:26px;display:inline-flex;align-items:center;gap:12px;background:rgba(255,255,255,.18);
   border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:999px;padding:13px 28px;font-size:23px;font-weight:700}
 .rt i{width:8px;height:8px;border-radius:50%;background:#8ff0f0;display:block}
@@ -1712,6 +1716,7 @@ export async function inset({ size, photo, copy }) {
 <div class="bgfull"><img class="cover" src="data:image/jpeg;base64,${photo}"></div>
 <div class="scrimtop"></div><div class="scrim"></div>
 <div class="frame"></div>
+<div class="midbg"></div>
 <div class="mid" data-guard="الكتلة">
   <div class="line"></div>
   <div class="glab">${copy.label}</div>
