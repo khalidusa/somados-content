@@ -17,11 +17,12 @@ const SIZES = {
 };
 
 // المناطق الآمنة لواجهة انستغرام على 1080×1920 (القسم ٥.٤)
-const REEL_SAFE = { top: 210, bottom: 440, right: 230, left: 60 };
+// 230 هو الحد الأدنى بالخطة؛ 250 يترك 20px تنفّس فلا يلاصق أي حرف حافة أزرار انستغرام
+const REEL_SAFE = { top: 210, bottom: 440, right: 250, left: 60 };
 
 const TINT = { teal: 0.09, neutral: 0.05, moody: 0.07 };   // سقف 9% — أكثر يخلي الصورة أحادية اللون
 
-function buildHTML(post, { size = 'post', background, safeGuides = false } = {}) {
+function buildHTML(post, { size = 'post', background, safeGuides = false, animated = false, duration = 10 } = {}) {
   const { w, h } = SIZES[size];
   const isReel = size === 'reel';
   const padT = isReel ? REEL_SAFE.top : 64;
@@ -48,7 +49,8 @@ ${fontFaceCSS()}
 html,body{width:${w}px;height:${h}px;overflow:hidden}
 body{font-family:'Tajawal',sans-serif;background:${BRAND.ink};-webkit-font-smoothing:antialiased}
 .frame{position:relative;width:${w}px;height:${h}px;overflow:hidden}
-.bg{position:absolute;inset:0;background-size:cover;background-position:center}
+.bg{position:absolute;inset:0;background-size:cover;background-position:center;will-change:transform}
+*{transition:none!important;animation:none!important}   /* الحركة تُحسب بـ__seek لا بتوقيت CSS */
 .tint{position:absolute;inset:0;background:${BRAND.teal};opacity:${tint};mix-blend-mode:color}
 .scrim{position:absolute;inset:0;background:
   linear-gradient(to top, rgba(6,14,16,.92) 0%, rgba(6,14,16,.72) 22%, rgba(6,14,16,.18) 52%, rgba(6,14,16,.34) 100%)}
@@ -99,7 +101,41 @@ ${safeGuides ? `.guide{position:absolute;background:rgba(255,0,0,.28);pointer-ev
   // لا يُستدعى عند التحميل: القياس قبل جاهزية الخط يقرأ ترتيب الخط الاحتياطي،
   // ثم يعيد المتصفح الترتيب بعد رسم Tajawal فيخرج الفوتر خارج الإطار بلا ما يشعر الحارس.
   // render.js ينادي هذه الدالة بعد document.fonts.ready.
+${animated ? `
+  // كل إطار دالة صافية من الزمن: نفس t يعطي نفس البكسل بالضبط، مهما تكرر التشغيل.
+  // لا توقيت CSS ولا تسجيل شاشة — هذان يعطيان إطارات مختلفة بين تشغيل وآخر.
+  var DUR = ${duration};
+  var bg = document.getElementById('bg');
+  var els = [
+    { el: document.querySelector('.brandbar'), at: 0.15, dur: 0.7, rise: 18 },
+    { el: document.querySelector('.kicker'),   at: 0.55, dur: 0.7, rise: 26 },
+    { el: document.getElementById('headline'), at: 0.95, dur: 0.9, rise: 34 },
+    { el: document.querySelector('.sub'),      at: 1.55, dur: 0.8, rise: 26 },
+    { el: document.querySelector('.foot'),     at: 2.05, dur: 0.8, rise: 20 },
+  ].filter(function (x) { return x.el; });
+  var easeOut = function (p) { return 1 - Math.pow(1 - p, 3); };
+  var clamp01 = function (v) { return v < 0 ? 0 : v > 1 ? 1 : v; };
+
+  window.__seek = function (t) {
+    var g = clamp01(t / DUR);
+    var scale = 1.06 + 0.08 * g;                       // زوم بطيء ثابت الاتجاه
+    var shiftY = -14 * g;
+    bg.style.transform = 'scale(' + scale.toFixed(5) + ') translateY(' + shiftY.toFixed(3) + 'px)';
+    for (var i = 0; i < els.length; i++) {
+      var x = els[i];
+      var p = easeOut(clamp01((t - x.at) / x.dur));
+      x.el.style.opacity = p.toFixed(4);
+      x.el.style.transform = 'translateY(' + ((1 - p) * x.rise).toFixed(3) + 'px)';
+    }
+    return t;
+  };
+  window.__seek(0);
+` : ''}
+
   window.__fitText = function () {
+    // القياس لازم يكون بالحالة النهائية: __seek(0) يترك العناصر مزاحة بـtranslateY
+    // وgetBoundingClientRect يحسب التحويل، فيقرأ الفوتر خارج الحد ويصغّر الخط بلا سبب.
+    if (window.__seek) window.__seek(1e6);
     var h = document.getElementById('headline');
     var foot = document.querySelector('.foot');
     var brand = document.querySelector('.brandbar');
