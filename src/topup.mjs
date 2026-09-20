@@ -67,10 +67,16 @@ for (const channel of channels) {
     const head2 = await fetch(url, { method: 'HEAD' }).catch(() => null);
     if (!head2?.ok) { console.error(`  ! ${p.localLabel}: الملف غير متاح (${head2?.status ?? 'شبكة'}) ${url}`); continue; }
 
-    if (dry) { console.log(`  [تجربة] ${p.localLabel} ${isReel ? 'ريل' : 'صورة'} → ${url}`); continue; }
+    if (dry) {
+      const t = (p.captions[channel.kind] ?? p.captions.social).split('\n')[0];
+      console.log(`  [تجربة] ${p.localLabel} ${isReel ? 'ريل' : 'صورة'} · "${t}"`);
+      continue;
+    }
 
+    // لكل منصة كابشنها: فيسبوك يحمل الرابط، وانستقرام يحيل إلى البايو
+    const text = p.captions[channel.kind] ?? p.captions.social;
     const post = await createPost({
-      channelId: channel.id, text: p.captions.social, url, dueAt: p.dueAt, isReel, thumbnailUrl,
+      channelId: channel.id, text, url, dueAt: p.dueAt, isReel, thumbnailUrl,
       metadata: metadataFor(channel.kind, isReel)
     });
     posted[channel.id] = posted[channel.id] ?? {};

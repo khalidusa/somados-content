@@ -63,18 +63,45 @@ if (done.size) console.log(`استئناف: ${done.size} منشوراً مرسو
 const history = await loadHistory();
 history.photoIds ??= {};
 
+// تشغيلات ملغاة تترك معرّفات صور محجوزة بلا منشور، فتجفّ المجموعات بلا سبب.
+// نحرّر كل معرّف لا تشير إليه خطة قائمة.
+{
+  const { listPlans: lp, loadPlan: rp } = await import('./lib/store.mjs');
+  const alive = new Set();
+  for (const key of await lp()) for (const post of (await rp(key))?.posts ?? [])
+    for (const id of post.photoIds ?? []) alive.add(String(id));
+  const before = Object.keys(history.photoIds).length;
+  if (alive.size) {
+    for (const id of Object.keys(history.photoIds)) if (!alive.has(id)) delete history.photoIds[id];
+    const freed = before - Object.keys(history.photoIds).length;
+    if (freed) console.log(`حرّرنا ${freed} صورة محجوزة بلا منشور.`);
+  }
+}
+
 console.log(`خطة ${monthKey}: ${slots.length} منشوراً، الساعة ${String(POST_HOUR).padStart(2, '0')}:00 بتوقيت بغداد.`);
 
 // ── ١. تركيبة فريدة لكل يوم ──────────────────────────────────────────
-const usedThisMonth = new Set();          // التكرار داخل الشهر نفسه كان يمر: history لا يعرفه بعد
+// المنشورات المرسومة سابقاً تدخل الحساب أيضاً: بدونها كان الاستئناف يعيد
+// العنوان نفسه لأن الذاكرة تبدأ فارغة في كل تشغيل.
+const usedThisMonth = new Set([...done.values()].map(p => p.headlineKey ?? (p.copy?.headline ?? []).join(' ')));
+const recentHeadlines = [...done.values()]
+  .sort((a, b) => a.day - b.day).slice(-8)
+  .map(p => (p.copy?.headline ?? []).join(' '));
 const planned = slots.map((slot, i) => {
   for (let attempt = 0; attempt < 10; attempt++) {
     const candidate = buildPost({ monthKey, slot, index: i, brand, data, salt: attempt ? String(attempt) : '' });
     const usedHeadline = history.headlines[candidate.headlineKey];
     const recent = usedHeadline && (Date.now() - new Date(usedHeadline).getTime()) < 1000 * 60 * 60 * 24 * 120;
-    const dupe = usedThisMonth.has(candidate.headlineKey);
-    if (!history.combos[candidate.comboId] && !recent && !dupe) { usedThisMonth.add(candidate.headlineKey); return candidate; }
-    if (attempt === 9) { usedThisMonth.add(candidate.headlineKey); return candidate; }
+    const plain = candidate.copy.headline.join(' ');
+    const dupe = usedThisMonth.has(candidate.headlineKey) || recentHeadlines.includes(plain);
+    const keep = (c) => {
+      usedThisMonth.add(c.headlineKey);
+      recentHeadlines.push(c.copy.headline.join(' '));
+      if (recentHeadlines.length > 8) recentHeadlines.shift();
+      return c;
+    };
+    if (!history.combos[candidate.comboId] && !recent && !dupe) return keep(candidate);
+    if (attempt === 9) return keep(candidate);
   }
 });
 
@@ -247,6 +274,7 @@ await withBrowser(async (page) => {
       layout: post.layout, comboId: post.comboId,
       images: { feed: relFeed, photos: relPhotos },
       credit: photos.map(p => p.photographer),
+      photoIds: photos.map(p => p.id),
       photoMatch: photos.map(p => (p.tier === 0 ? 'مطابق' : 'صورة رحلة')),
       copy: { ...post.copy, photo2: undefined }, hashtags: post.hashtags, captions: post.captions
     });

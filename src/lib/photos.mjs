@@ -46,13 +46,18 @@ export function metaFilter(p) {
 }
 
 /** كل الصور الصالحة لمجموعة استعلامات، مرتبة عشوائياً بالبذرة نفسها. */
-export async function pool(queries, { perQuery = 30 } = {}) {
+export async function pool(queries, { perQuery = 40, pages = 2 } = {}) {
   const out = [];
   for (const q of queries) {
-    let res;
-    try { res = await searchPhotos(q, 1, perQuery); }
-    catch (e) { console.warn(`  تعذّر البحث عن "${q}": ${e.message}`); continue; }
-    for (const p of res.photos ?? []) {
+    const photos = [];
+    for (let page = 1; page <= pages; page++) {
+      try {
+        const res = await searchPhotos(q, page, perQuery);
+        photos.push(...(res.photos ?? []));
+        if ((res.photos ?? []).length < perQuery) break;      // لا صفحة تالية
+      } catch (e) { console.warn(`  تعذّر البحث عن "${q}": ${e.message}`); break; }
+    }
+    for (const p of photos) {
       if (metaFilter(p)) continue;
       // الصلة: صورة وصفها يذكر اسم المكان أقرب للمدينة من صورة عامة بالبحث نفسه
       const head = q.split(' ')[0].toLowerCase();
