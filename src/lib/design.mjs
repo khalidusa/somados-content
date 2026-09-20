@@ -167,7 +167,7 @@ body{font-family:'Noto Kufi Arabic','Tajawal',sans-serif;-webkit-font-smoothing:
 /** يصغّر العنوان حتى يدخل إطاره — بعد جاهزية الخط لا قبلها.
  *  ثم يفحص التخطيط: لا عنصرين متداخلين، ولا عنصر مقصوص على حافة الإطار.
  *  الفحص هو الضمانة الوحيدة أن تصميماً جديداً لا يكسر تصميماً قديماً. */
-const FIT = `
+export const AUDIT_JS = `
 window.__fit = function () {
   const out = [];
   document.querySelectorAll('[data-fit]').forEach(el => {
@@ -261,7 +261,7 @@ ${await fontFaceCSS()}
 ${BASE}
 html,body{width:${size.w}px;height:${size.h}px;overflow:hidden}
 .stage{width:${size.w}px;height:${size.h}px}
-${css}</style><body><div class="stage">${body}</div><script>${FIT}${extraJS}</script></body></html>`;
+${css}</style><body><div class="stage">${body}</div><script>${AUDIT_JS}${extraJS}</script></body></html>`;
 }
 
 /* ═════ A — «العرض»: صورة داخل قوس، وعنوان بلونين وصف مزايا ═════ */
