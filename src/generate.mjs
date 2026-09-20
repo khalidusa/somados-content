@@ -98,14 +98,25 @@ const TEXT_GUARD = process.env.PHOTO_TEXT_GUARD === '1'
 if (TEXT_GUARD) console.log('حارس النص داخل الصور: مفعّل');
 
 const poolCache = new Map();
-async function photosFor(queries, dayId, page) {
+// أنقرة مدينة داخلية بلا بحر: صورة ساحلية تحت اسمها خطأ يراه الزبون فوراً.
+// حين يحمل القالب اسم المدينة فوق صورتها، نقبل فقط صورة يذكر وصفها المكان،
+// وإن لم توجد ننتقل إلى صور "الرحلة" (طائرة، سحاب، مطار) لا إلى مدينة أخرى.
+const JOURNEY_FALLBACK = ['airplane wing above clouds', 'airport terminal window sunlight', 'airplane window clouds day'];
+
+async function photosFor(queries, dayId, page, { strict = false } = {}) {
   const chosen = [];
   for (const q of queries) {
     if (!poolCache.has(q)) poolCache.set(q, await pool([q]));
     // الصور التي يذكر وصفها اسم المكان أولاً: صورة مطر على زجاج نافذة
     // اجتازت كل فحوص الجودة ولم تكن إعلان إسطنبول بأي معنى.
-    const all = poolCache.get(q);
-    const candidates = [...all.filter(c => c.relevant), ...all.filter(c => !c.relevant)];
+    let all = poolCache.get(q);
+    let candidates = strict ? all.filter(c => c.relevant) : [...all.filter(c => c.relevant), ...all.filter(c => !c.relevant)];
+    if (strict && !candidates.length) {
+      const alt = JOURNEY_FALLBACK[chosen.length % JOURNEY_FALLBACK.length];
+      console.log(`  اليوم ${dayId}: لا صورة مطابقة لـ"${q}" — نستبدلها بصورة رحلة`);
+      if (!poolCache.has(alt)) poolCache.set(alt, await pool([alt]));
+      candidates = poolCache.get(alt);
+    }
     let taken = null;
     for (const cand of candidates) {
       if (history.photoIds[cand.id]) continue;
@@ -136,7 +147,7 @@ const todo = planned.filter(p => !done.has(p.day)).slice(0, limit);
 await withBrowser(async (page) => {
   for (const post of todo) {
     const dayId = String(post.day).padStart(2, '0');
-    const photos = await photosFor(post.queries, dayId, page);
+    const photos = await photosFor(post.queries, dayId, page, { strict: post.photosNeeded > 1 });
     if (!photos) { console.warn(`  اليوم ${dayId}: لم نجد صوراً كافية — نتخطّاه`); continue; }
 
     const html = await buildPostHTML({ layout: post.layout, size: SIZES.feed, photos: photos.map(p => p.b64), copy: post.copy });

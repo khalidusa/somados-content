@@ -862,7 +862,258 @@ ${footer(copy)}`;
   return shell(size, css, body);
 }
 
-export const LAYOUTS = { destination, boarding, arches, fan, ticket, windowSeat, diagonal, grid, routemap, overlay, split, panorama, polaroids, quad, wave, passport };
+
+/* ═════ Q — «الشريط الجانبي»: عمود تركوازي وصورة تملأ الباقي ═════ */
+export async function sidebar({ size, photo, copy }) {
+  const css = `
+.rail{position:absolute;top:0;bottom:0;right:0;width:176px;background:linear-gradient(180deg,${P.teal},${P.deep})}
+.railtx{position:absolute;top:0;bottom:0;right:0;width:176px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:26px;color:#fff;z-index:4}
+.railtx .dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.7)}
+.railtx .w{writing-mode:vertical-rl;font-size:27px;font-weight:600;letter-spacing:.06em}
+.pic{position:absolute;top:150px;right:214px;left:64px;height:640px;border-radius:34px;overflow:hidden;
+  box-shadow:0 28px 58px rgba(6,60,62,.26)}
+.plane{position:absolute;top:96px;left:58px;width:212px;z-index:6;transform:rotate(-10deg);
+  filter:drop-shadow(0 16px 26px rgba(6,60,62,.3))}
+.route{position:absolute;top:742px;left:104px;background:#fff;border-radius:999px;padding:14px 30px;
+  display:flex;align-items:center;gap:14px;box-shadow:0 16px 32px rgba(6,60,62,.2);z-index:5}
+.route b{color:${P.ink};font-size:25px;font-weight:700}
+.route span{color:${P.teal};font-size:24px;font-weight:700}
+.hl{position:absolute;top:842px;right:214px;left:64px;font-size:76px;text-align:right;white-space:nowrap}
+.sub{position:absolute;top:952px;right:214px;left:64px;font-size:28px;text-align:right}
+.bens{position:absolute;top:1014px;right:64px;left:56px;justify-content:flex-start}
+.pay{bottom:168px;right:214px}
+.foot{right:214px}
+.head{right:214px;left:64px}`;
+  const body = `
+<div class="rail"></div>
+<div class="railtx"><span class="w">${copy.railText}</span><span class="dot"></span><span class="w">SOMADOS</span></div>
+<div class="pic"><img class="cover" src="data:image/jpeg;base64,${photo}"></div>
+${copy.plane ? `<img class="plane" data-guard="الطائرة" data-soft="1" src="${await plane(copy.plane)}">` : ''}
+<div class="route" data-guard="المسار"><b>${copy.from}</b><span>⇄</span><b>${copy.to}</b></div>
+${header(await logo(), '')}
+<div class="hl" data-guard="العنوان" data-fit="76" data-room="800">${headlineHTML(copy.headline)}</div>
+<div class="sub" data-guard="السطر">${copy.sub}</div>
+${benefits(copy.benefits)}
+${await payments()}
+${footer(copy)}`;
+  return shell(size, css, body);
+}
+
+/* ═════ R — «الدائرة الكبرى»: دائرة صورة تخرج من أعلى الإطار ═════ */
+export async function bigcircle({ size, photo, copy }) {
+  const css = `
+.ring{position:absolute;top:-262px;right:50%;transform:translateX(50%);width:1010px;height:1010px;border-radius:50%;
+  border:2px dashed rgba(0,166,166,.5)}
+.circ{position:absolute;top:-232px;right:50%;transform:translateX(50%);width:950px;height:950px;border-radius:50%;
+  overflow:hidden;border:14px solid #fff;box-shadow:0 30px 64px rgba(6,60,62,.26)}
+.plane{position:absolute;top:596px;left:44px;width:224px;z-index:6;transform:rotate(-12deg);
+  filter:drop-shadow(0 16px 26px rgba(6,60,62,.3))}
+.route{position:absolute;top:706px;right:50%;transform:translateX(50%);background:#fff;border-radius:999px;
+  padding:14px 30px;display:flex;align-items:center;gap:14px;box-shadow:0 16px 32px rgba(6,60,62,.2);z-index:7}
+.route b{color:${P.ink};font-size:25px;font-weight:700}
+.route span{color:${P.teal};font-size:24px;font-weight:700}
+.hl{position:absolute;top:800px;right:64px;left:64px;font-size:82px;text-align:center;white-space:nowrap}
+.sub{position:absolute;top:918px;right:64px;left:64px;font-size:29px;text-align:center}
+.bens{position:absolute;top:1006px;right:56px;left:56px}
+.pay{bottom:168px}`;
+  const body = `
+<div class="ring"></div>
+<div class="circ"><img class="cover" src="data:image/jpeg;base64,${photo}"></div>
+${copy.plane ? `<img class="plane" data-guard="الطائرة" data-soft="1" src="${await plane(copy.plane)}">` : ''}
+<div class="route" data-guard="المسار"><b>${copy.from}</b><span>⇄</span><b>${copy.to}</b></div>
+${header(await logo(), copy.label)}
+<div class="hl" data-guard="العنوان" data-fit="82" data-room="952">${headlineHTML(copy.headline)}</div>
+<div class="sub" data-guard="السطر">${copy.sub}</div>
+${benefits(copy.benefits)}
+${await payments()}
+${footer(copy)}`;
+  return shell(size, css, body);
+}
+
+/* ═════ S — «الفسيفساء»: ثلاث صور بارتفاعات متباينة ═════ */
+export async function mosaic({ size, photos, copy }) {
+  const css = `
+.m1{position:absolute;top:158px;right:64px;width:440px;height:600px;border-radius:32px;overflow:hidden;box-shadow:0 22px 44px rgba(6,60,62,.2)}
+.m2{position:absolute;top:158px;left:64px;width:440px;height:286px;border-radius:32px;overflow:hidden;box-shadow:0 22px 44px rgba(6,60,62,.2)}
+.m3{position:absolute;top:472px;left:64px;width:440px;height:286px;border-radius:32px;overflow:hidden;box-shadow:0 22px 44px rgba(6,60,62,.2)}
+.tagm{position:absolute;top:690px;right:104px;background:#fff;border-radius:999px;padding:12px 26px;
+  display:flex;align-items:center;gap:12px;box-shadow:0 14px 30px rgba(6,60,62,.2);z-index:5}
+.tagm b{color:${P.ink};font-size:24px;font-weight:700}
+.tagm span{color:${P.teal};font-size:23px;font-weight:700}
+.hl{position:absolute;top:804px;right:64px;left:64px;font-size:80px;text-align:center;white-space:nowrap}
+.sub{position:absolute;top:938px;right:64px;left:64px;font-size:29px;text-align:center}
+.bens{position:absolute;top:1006px;right:56px;left:56px}
+.pay{bottom:168px}`;
+  const body = `
+<div class="m1"><img class="cover" src="data:image/jpeg;base64,${photos[0]}"></div>
+<div class="m2"><img class="cover" src="data:image/jpeg;base64,${photos[1] ?? photos[0]}"></div>
+<div class="m3"><img class="cover" src="data:image/jpeg;base64,${photos[2] ?? photos[0]}"></div>
+<div class="tagm" data-guard="المسار"><b>${copy.from}</b><span>⇄</span><b>${copy.to}</b></div>
+${header(await logo(), copy.label)}
+<div class="hl" data-guard="العنوان" data-fit="80" data-room="952">${headlineHTML(copy.headline)}</div>
+<div class="sub" data-guard="السطر">${copy.sub}</div>
+${benefits(copy.benefits)}
+${await payments()}
+${footer(copy)}`;
+  return shell(size, css, body);
+}
+
+/* ═════ T — «الحروف المصوّرة»: اسم المدينة والصورة داخل حروفه ═════ */
+export async function postertype({ size, photo, copy }) {
+  const css = `
+.top{position:absolute;top:150px;right:64px;left:64px;height:360px;border-radius:30px;overflow:hidden;
+  box-shadow:0 24px 48px rgba(6,60,62,.22)}
+.word{position:absolute;top:516px;right:64px;left:64px;text-align:center;font-weight:900;font-size:184px;
+  line-height:1.02;color:transparent;-webkit-background-clip:text;background-clip:text;background-size:cover;
+  background-position:center;white-space:nowrap}
+.wordline{position:absolute;top:768px;right:300px;left:300px;height:6px;border-radius:3px;background:${P.teal}}
+.hl{position:absolute;top:824px;right:64px;left:64px;font-size:58px;text-align:center;white-space:nowrap}
+.sub{position:absolute;top:930px;right:64px;left:64px;font-size:28px;text-align:center}
+.plane{position:absolute;top:356px;left:44px;width:196px;z-index:6;transform:rotate(-11deg);
+  filter:drop-shadow(0 16px 24px rgba(6,60,62,.28))}
+.bens{position:absolute;top:1006px;right:56px;left:56px}
+.pay{bottom:168px}`;
+  const body = `
+<div class="top"><img class="cover" src="data:image/jpeg;base64,${photo}"></div>
+<div class="word" data-guard="اسم المدينة" data-fit="184" data-room="952"
+     style="background-image:url(data:image/jpeg;base64,${photo})">${copy.to}</div>
+<div class="wordline"></div>
+${copy.plane ? `<img class="plane" data-guard="الطائرة" data-soft="1" src="${await plane(copy.plane)}">` : ''}
+${header(await logo(), copy.label)}
+<div class="hl" data-guard="العنوان" data-fit="62" data-room="952">${headlineHTML(copy.headline)}</div>
+<div class="sub" data-guard="السطر">${copy.sub}</div>
+${benefits(copy.benefits)}
+${await payments()}
+${footer(copy)}`;
+  return shell(size, css, body);
+}
+
+/* ═════ U — «الشريط الفيلمي»: أربع صور بثقوب فيلم ═════ */
+export async function filmstrip({ size, photos, copy }) {
+  const css = `
+.strip{position:absolute;top:206px;right:-40px;left:-40px;height:440px;background:${P.ink};
+  transform:rotate(-5deg);box-shadow:0 26px 54px rgba(6,60,62,.3);padding:34px 0;display:flex;
+  align-items:center;justify-content:center;gap:16px}
+.holes{position:absolute;right:0;left:0;height:18px;display:flex;justify-content:space-around;align-items:center}
+.holes i{width:26px;height:12px;border-radius:3px;background:#fff;display:block}
+.fr{width:236px;height:300px;border-radius:8px;overflow:hidden;flex:none}
+.hl{position:absolute;top:744px;right:64px;left:64px;font-size:80px;text-align:center;white-space:nowrap}
+.sub{position:absolute;top:880px;right:64px;left:64px;font-size:29px;text-align:center}
+.route{position:absolute;top:938px;right:50%;transform:translateX(50%);background:#fff;border-radius:999px;
+  padding:13px 28px;display:flex;align-items:center;gap:12px;box-shadow:0 14px 30px rgba(6,60,62,.18)}
+.route b{color:${P.ink};font-size:24px;font-weight:700}
+.route span{color:${P.teal};font-size:23px;font-weight:700}
+.bens{position:absolute;top:1006px;right:56px;left:56px}
+.pay{bottom:168px}`;
+  const body = `
+<div class="strip">
+  <div class="holes" style="top:8px">${Array.from({ length: 14 }).map(() => '<i></i>').join('')}</div>
+  ${[0, 1, 2, 3].map(i => `<div class="fr"><img class="cover" src="data:image/jpeg;base64,${photos[i] ?? photos[0]}"></div>`).join('')}
+  <div class="holes" style="bottom:8px">${Array.from({ length: 14 }).map(() => '<i></i>').join('')}</div>
+</div>
+${header(await logo(), copy.label)}
+<div class="hl" data-guard="العنوان" data-fit="80" data-room="952">${headlineHTML(copy.headline)}</div>
+<div class="sub" data-guard="السطر">${copy.sub}</div>
+<div class="route" data-guard="المسار"><b>${copy.from}</b><span>⇄</span><b>${copy.to}</b></div>
+${benefits(copy.benefits)}
+${await payments()}
+${footer(copy)}`;
+  return shell(size, css, body);
+}
+
+/* ═════ V — «لوحة المغادرة»: جدول رحلات كلوحة المطار ═════ */
+export async function board({ size, photo, copy }) {
+  const css = `
+.pic{position:absolute;top:150px;right:64px;left:64px;height:272px;border-radius:30px;overflow:hidden;
+  box-shadow:0 22px 44px rgba(6,60,62,.22)}
+.bd{position:absolute;top:452px;right:64px;left:64px;background:#fff;border-radius:26px;overflow:hidden;
+  border:1px solid ${P.line};box-shadow:0 22px 46px rgba(6,60,62,.18)}
+.bdh{display:flex;justify-content:space-between;align-items:center;padding:20px 30px;background:${P.ink}}
+.bdh span{color:#fff;font-size:21px;font-weight:600;letter-spacing:.08em}
+.row{display:flex;justify-content:space-between;align-items:center;padding:17px 30px;border-top:1px solid ${P.line}}
+.row .c{color:${P.ink};font-size:29px;font-weight:700}
+.row .t{color:${P.body};font-size:23px;font-weight:400}
+.row .st{color:${P.teal};font-size:22px;font-weight:700;background:${P.mist};border-radius:999px;padding:8px 20px}
+.hl{position:absolute;top:892px;right:64px;left:64px;font-size:70px;text-align:center;white-space:nowrap}
+.bens{position:absolute;top:1006px;right:56px;left:56px}
+.pay{bottom:168px}`;
+  const body = `
+<div class="pic"><img class="cover" src="data:image/jpeg;base64,${photo}"></div>
+<div class="bd" data-guard="اللوحة">
+  <div class="bdh"><span>الوجهة</span><span>المغادرة</span><span>الحالة</span></div>
+  ${copy.rows.map(r => `<div class="row"><span class="c">${r.city}</span><span class="t">${r.when}</span><span class="st">${r.status}</span></div>`).join('')}
+</div>
+${header(await logo(), copy.label)}
+<div class="hl" data-guard="العنوان" data-fit="72" data-room="952">${headlineHTML(copy.headline)}</div>
+${benefits(copy.benefits)}
+${await payments()}
+${footer(copy)}`;
+  return shell(size, css, body);
+}
+
+/* ═════ W — «الرزمة»: بطاقات صور متراصّة بعمق ═════ */
+export async function stack({ size, photos, copy }) {
+  const css = `
+.s3{position:absolute;top:168px;right:172px;left:172px;height:520px;border-radius:32px;background:#e4f2f2;
+  box-shadow:0 18px 34px rgba(6,60,62,.14);transform:rotate(-7deg)}
+.s2{position:absolute;top:186px;right:140px;left:140px;height:540px;border-radius:32px;overflow:hidden;
+  box-shadow:0 20px 40px rgba(6,60,62,.18);transform:rotate(4deg)}
+.s1{position:absolute;top:206px;right:110px;left:110px;height:560px;border-radius:32px;overflow:hidden;
+  border:10px solid #fff;box-shadow:0 30px 60px rgba(6,60,62,.28);z-index:4}
+.route{position:absolute;top:730px;right:50%;transform:translateX(50%);background:#fff;border-radius:999px;
+  padding:14px 30px;display:flex;align-items:center;gap:14px;box-shadow:0 16px 32px rgba(6,60,62,.2);z-index:6}
+.route b{color:${P.ink};font-size:25px;font-weight:700}
+.route span{color:${P.teal};font-size:24px;font-weight:700}
+.hl{position:absolute;top:824px;right:64px;left:64px;font-size:80px;text-align:center;white-space:nowrap}
+.sub{position:absolute;top:940px;right:64px;left:64px;font-size:29px;text-align:center}
+.bens{position:absolute;top:1006px;right:56px;left:56px}
+.pay{bottom:168px}`;
+  const body = `
+<div class="s3"></div>
+<div class="s2"><img class="cover" src="data:image/jpeg;base64,${photos[1] ?? photos[0]}"></div>
+<div class="s1"><img class="cover" src="data:image/jpeg;base64,${photos[0]}"></div>
+<div class="route" data-guard="المسار"><b>${copy.from}</b><span>⇄</span><b>${copy.to}</b></div>
+${header(await logo(), copy.label)}
+<div class="hl" data-guard="العنوان" data-fit="80" data-room="952">${headlineHTML(copy.headline)}</div>
+<div class="sub" data-guard="السطر">${copy.sub}</div>
+${benefits(copy.benefits)}
+${await payments()}
+${footer(copy)}`;
+  return shell(size, css, body);
+}
+
+/* ═════ X — «القوسان»: نصفان متقابلان بصورتين ═════ */
+export async function duo({ size, photos, copy }) {
+  const css = `
+.d1{position:absolute;top:150px;right:64px;width:452px;height:620px;border-radius:230px 230px 30px 30px;
+  overflow:hidden;box-shadow:0 24px 48px rgba(6,60,62,.24)}
+.d2{position:absolute;top:238px;left:64px;width:452px;height:620px;border-radius:30px 30px 230px 230px;
+  overflow:hidden;box-shadow:0 24px 48px rgba(6,60,62,.24)}
+.dc1,.dc2{position:absolute;background:#fff;border-radius:999px;padding:11px 24px;color:${P.ink};
+  font-size:24px;font-weight:700;box-shadow:0 12px 26px rgba(6,60,62,.2);z-index:5}
+.dc1{top:700px;right:172px} .dc2{top:786px;left:172px}
+.arrowm{position:absolute;top:472px;right:50%;transform:translateX(50%);width:84px;height:84px;border-radius:50%;
+  background:${P.teal};color:#fff;font-size:34px;font-weight:800;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 16px 32px rgba(0,166,166,.4);z-index:6}
+.hl{position:absolute;top:892px;right:64px;left:64px;font-size:72px;text-align:center;white-space:nowrap}
+.bens{position:absolute;top:1006px;right:56px;left:56px}
+.pay{bottom:168px}`;
+  const body = `
+<div class="d1"><img class="cover" src="data:image/jpeg;base64,${photos[0]}"></div>
+<div class="d2"><img class="cover" src="data:image/jpeg;base64,${photos[1] ?? photos[0]}"></div>
+<div class="dc1" data-guard="مدينة ١">${copy.from}</div>
+<div class="dc2" data-guard="مدينة ٢">${copy.to}</div>
+<div class="arrowm">⇄</div>
+${header(await logo(), copy.label)}
+<div class="hl" data-guard="العنوان" data-fit="74" data-room="952">${headlineHTML(copy.headline)}</div>
+${benefits(copy.benefits)}
+${await payments()}
+${footer(copy)}`;
+  return shell(size, css, body);
+}
+
+export const LAYOUTS = { destination, boarding, arches, fan, ticket, windowSeat, diagonal, grid, routemap, overlay, split, panorama, polaroids, quad, wave, passport, sidebar, bigcircle, mosaic, postertype, filmstrip, board, stack, duo };
 
 export async function buildPostHTML({ layout, size, photos, copy }) {
   const fn = LAYOUTS[layout];
