@@ -7,7 +7,7 @@ import path from 'node:path';
 import { loadEnv } from './lib/env.mjs';
 import { withBrowser, shoot, photoHash, hammingDistance, SIZES } from './lib/render.mjs';
 import { buildPostHTML } from './lib/design.mjs';
-import { buildPost, typeSequence } from './lib/compose.mjs';
+import { buildPost, ROTATION } from './lib/compose.mjs';
 import { monthSlots, targetMonth } from './lib/schedule.mjs';
 import { pool, download, photoQuality, qualityReject } from './lib/photos.mjs';
 import { hasVisibleText, accounts } from './lib/cloudflare.mjs';
@@ -62,18 +62,14 @@ if (done.size) console.log(`استئناف: ${done.size} منشوراً مرسو
 
 const history = await loadHistory();
 history.photoIds ??= {};
-const types = typeSequence(slots.length);
 
 console.log(`خطة ${monthKey}: ${slots.length} منشوراً، الساعة ${String(POST_HOUR).padStart(2, '0')}:00 بتوقيت بغداد.`);
 
 // ── ١. تركيبة فريدة لكل يوم ──────────────────────────────────────────
-const typeCount = {};
 const usedThisMonth = new Set();          // التكرار داخل الشهر نفسه كان يمر: history لا يعرفه بعد
 const planned = slots.map((slot, i) => {
-  const t = types[i];
-  const typeIndex = (typeCount[t] = (typeCount[t] ?? -1) + 1);
   for (let attempt = 0; attempt < 10; attempt++) {
-    const candidate = buildPost({ monthKey, slot, index: i, typeIndex, type: t, brand, data, salt: attempt ? String(attempt) : '' });
+    const candidate = buildPost({ monthKey, slot, index: i, brand, data, salt: attempt ? String(attempt) : '' });
     const usedHeadline = history.headlines[candidate.headlineKey];
     const recent = usedHeadline && (Date.now() - new Date(usedHeadline).getTime()) < 1000 * 60 * 60 * 24 * 120;
     const dupe = usedThisMonth.has(candidate.headlineKey);
@@ -83,7 +79,7 @@ const planned = slots.map((slot, i) => {
 });
 
 if (dry) {
-  for (const p of planned) console.log(`  ${p.localLabel}  ${p.type.padEnd(11)} ${p.layout.padEnd(11)} "${p.headlineKey}"`);
+  for (const p of planned) console.log(`  ${p.localLabel}  ${p.layout.padEnd(11)} ${String(p.photosNeeded)}📷  "${p.headlineKey}"`);
   process.exit(0);
 }
 
@@ -109,31 +105,39 @@ async function photosFor(queries, dayId, page, { strict = false } = {}) {
     if (!poolCache.has(q)) poolCache.set(q, await pool([q]));
     // الصور التي يذكر وصفها اسم المكان أولاً: صورة مطر على زجاج نافذة
     // اجتازت كل فحوص الجودة ولم تكن إعلان إسطنبول بأي معنى.
-    let all = poolCache.get(q);
-    let candidates = strict ? all.filter(c => c.relevant) : [...all.filter(c => c.relevant), ...all.filter(c => !c.relevant)];
-    if (strict && !candidates.length) {
-      const alt = JOURNEY_FALLBACK[chosen.length % JOURNEY_FALLBACK.length];
-      console.log(`  اليوم ${dayId}: لا صورة مطابقة لـ"${q}" — نستبدلها بصورة رحلة`);
-      if (!poolCache.has(alt)) poolCache.set(alt, await pool([alt]));
-      candidates = poolCache.get(alt);
-    }
+    // ثلاث محاولات مرتّبة: المطابق أولاً، ثم صور الرحلة، ثم أي صورة تعبر الجودة.
+    // اليوم لا يُتخطّى إلا إذا سقطت الثلاث — والتخطّي يعني فجوة في التقويم.
+    const all = poolCache.get(q);
+    const tiers = [all.filter(c => c.relevant)];
+    const alt = JOURNEY_FALLBACK[chosen.length % JOURNEY_FALLBACK.length];
+    if (!poolCache.has(alt)) poolCache.set(alt, await pool([alt]));
+    tiers.push(poolCache.get(alt));
+    // في الوضع الصارم لا نقبل صورة لا يذكر وصفها المكان: عنوان "تذكرتك إلى
+    // البصرة" فوق برج غلطة خطأ أفدح من صورة طائرة محايدة.
+    if (!strict) tiers.push(all);
+
     let taken = null;
-    for (const cand of candidates) {
-      if (history.photoIds[cand.id]) continue;
-      if (chosen.some(c => c.id === cand.id)) continue;
-      let b64;
-      try { b64 = await download(cand); } catch (e) { console.warn(`  تعذّر التنزيل (${e.message})`); continue; }
-      const bad = qualityReject(await photoQuality(page, b64));
-      if (bad) { console.log(`  اليوم ${dayId}: ${bad} — نأخذ غيرها`); continue; }
-      if (TEXT_GUARD && chosen.length === 0) {         // البطل فقط: الصور الثانوية صغيرة ولا تُقرأ
-        const seen = await hasVisibleText(b64);
-        if (seen.checked && seen.hasText) { console.log(`  اليوم ${dayId}: لافتة أو كتابة داخل الصورة — نأخذ غيرها`); continue; }
+    for (const [tierIndex, candidates] of tiers.entries()) {
+      if (taken) break;
+      // الحلقة تصل هنا فقط إذا لم تنجح الطبقة السابقة (taken يكسر الحلقة)
+      if (tierIndex === 1) console.log(`  اليوم ${dayId}: لا صورة مطابقة صالحة لـ"${q}" — نستبدلها بصورة رحلة`);
+      for (const cand of candidates) {
+        if (history.photoIds[cand.id]) continue;
+        if (chosen.some(c => c.id === cand.id)) continue;
+        let b64;
+        try { b64 = await download(cand); } catch (e) { console.warn(`  تعذّر التنزيل (${e.message})`); continue; }
+        const bad = qualityReject(await photoQuality(page, b64), { sky: tierIndex === 1 });
+        if (bad) { console.log(`  اليوم ${dayId}: ${bad} — نأخذ غيرها`); continue; }
+        if (TEXT_GUARD && chosen.length === 0) {       // البطل فقط: الصور الثانوية صغيرة ولا تُقرأ
+          const seen = await hasVisibleText(b64);
+          if (seen.checked && seen.hasText) { console.log(`  اليوم ${dayId}: لافتة أو كتابة داخل الصورة — نأخذ غيرها`); continue; }
+        }
+        const h = await photoHash(page, b64);
+        const clash = history.hashes.find(prev => hammingDistance(prev.hash, h) < HASH_MIN_DISTANCE);
+        if (clash) { console.log(`  اليوم ${dayId}: صورة تشبه ${clash.ref} — نأخذ غيرها`); continue; }
+        taken = { ...cand, b64, hash: h, tier: tierIndex };
+        break;
       }
-      const h = await photoHash(page, b64);
-      const clash = history.hashes.find(prev => hammingDistance(prev.hash, h) < HASH_MIN_DISTANCE);
-      if (clash) { console.log(`  اليوم ${dayId}: صورة تشبه ${clash.ref} — نأخذ غيرها`); continue; }
-      taken = { ...cand, b64, hash: h };
-      break;
     }
     if (!taken) return null;
     chosen.push(taken);
@@ -147,12 +151,17 @@ const todo = planned.filter(p => !done.has(p.day)).slice(0, limit);
 await withBrowser(async (page) => {
   for (const post of todo) {
     const dayId = String(post.day).padStart(2, '0');
-    const photos = await photosFor(post.queries, dayId, page, { strict: post.photosNeeded > 1 });
+    const photos = await photosFor(post.queries, dayId, page, { strict: true });
     if (!photos) { console.warn(`  اليوم ${dayId}: لم نجد صوراً كافية — نتخطّاه`); continue; }
 
+    // القوالب التي تطلب صورة ثانية داخل النص (البطاقة البريدية) تأخذها من المجموعة نفسها
+    if (post.copy.photo2Needed && photos[1]) post.copy.photo2 = photos[1].b64;
     const html = await buildPostHTML({ layout: post.layout, size: SIZES.feed, photos: photos.map(p => p.b64), copy: post.copy });
     const { buf, fit } = await shoot(page, html, SIZES.feed);
-    if (fit && fit.ok === false) console.warn(`  اليوم ${dayId}: العنوان لم يدخل الإطار (${fit.width}px > ${fit.room}px)`);
+    if (fit && fit.ok === false) {
+      const why = (fit.problems ?? []).join(' · ') || 'العنوان أوسع من إطاره';
+      console.warn(`  اليوم ${dayId}: تخطيط غير سليم — ${why}`);
+    }
 
     const relFeed = `posts/${monthKey}/day${dayId}-feed.jpg`;
     await writeFile(path.join(ROOT, relFeed), buf);
@@ -170,13 +179,14 @@ await withBrowser(async (page) => {
 
     results.push({
       day: post.day, dueAt: post.dueAt, localLabel: post.localLabel,
-      type: post.type, layout: post.layout, comboId: post.comboId,
+      layout: post.layout, comboId: post.comboId,
       images: { feed: relFeed, photos: relPhotos },
       credit: photos.map(p => p.photographer),
-      copy: post.copy, hashtags: post.hashtags, captions: post.captions
+      photoMatch: photos.map(p => (p.tier === 0 ? 'مطابق' : 'صورة رحلة')),
+      copy: { ...post.copy, photo2: undefined }, hashtags: post.hashtags, captions: post.captions
     });
 
-    console.log(`  ${post.localLabel}  ${post.type.padEnd(11)} ${post.layout.padEnd(11)} "${post.headlineKey.slice(0, 48)}"`);
+    console.log(`  ${post.localLabel}  ${post.layout.padEnd(11)} "${post.headlineKey.slice(0, 52)}"`);
 
     // نقطة حفظ: عطل في اليوم ٢٦ يجب ألا يضيّع الأيام ٢٥ السابقة
     results.sort((a, b) => a.day - b.day);
@@ -197,7 +207,8 @@ async function writeReview(monthKey, plan) {
     <figure>
       <img src="day${String(p.day).padStart(2, '0')}-feed.jpg" loading="lazy" alt="">
       <figcaption><b>${p.localLabel}</b> · ${p.type} · ${p.layout}
-        <details><summary>الكابشن</summary><pre>${esc(p.captions.social)}</pre></details>
+        <details><summary>كابشن فيسبوك</summary><pre>${esc(p.captions.facebook)}</pre></details>
+        <details><summary>كابشن انستقرام</summary><pre>${esc(p.captions.instagram)}</pre></details>
       </figcaption>
     </figure>`).join('');
   const html = `<!doctype html><html dir="rtl" lang="ar"><meta charset="utf-8"><title>سومادوس ${monthKey}</title>

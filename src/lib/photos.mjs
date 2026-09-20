@@ -103,11 +103,15 @@ export async function photoQuality(page, imageB64) {
   }, imageB64);
 }
 
-/** حدود مختارة على صور حقيقية: أقل منها والإعلان يخرج ليلياً أو باهتاً. */
-export function qualityReject(q) {
-  if (q.mean < 92) return `الصورة معتمة (متوسط الإضاءة ${q.mean.toFixed(0)})`;
-  if (q.darkRatio > 0.42) return `${Math.round(q.darkRatio * 100)}% من الصورة أسود`;
-  if (q.sd < 28) return `تباين ضعيف (${q.sd.toFixed(0)})`;
-  if (q.saturation < 20) return `صورة باهتة (تشبّع ${q.saturation.toFixed(0)})`;
+/**
+ * حدود مختارة على صور حقيقية: أقل منها والإعلان يخرج ليلياً أو باهتاً.
+ * sky=true لصور الرحلة (سحاب، جناح، مدرج): السماء منخفضة التشبّع بطبيعتها،
+ * وحدّ المدن كان يرفضها كلها فتتحول أيام كاملة إلى فجوات في التقويم.
+ */
+export function qualityReject(q, { sky = false } = {}) {
+  if (q.mean < (sky ? 80 : 92)) return `الصورة معتمة (متوسط الإضاءة ${q.mean.toFixed(0)})`;
+  if (q.darkRatio > (sky ? 0.5 : 0.42)) return `${Math.round(q.darkRatio * 100)}% من الصورة أسود`;
+  if (q.sd < (sky ? 14 : 28)) return `تباين ضعيف (${q.sd.toFixed(0)})`;
+  if (q.saturation < (sky ? 5 : 20)) return `صورة باهتة (تشبّع ${q.saturation.toFixed(0)})`;
   return null;
 }

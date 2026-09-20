@@ -117,5 +117,15 @@
       "airport terminal window sunlight",
       "runway airplane takeoff day"
     ]
+  },
+  "KIK": {
+    "ar": "كركوك",
+    "latin": "KIRKUK",
+    "country": "iq",
+    "q": [
+      "Kirkuk Iraq",
+      "Iraq northern landscape",
+      "Iraq town hills"
+    ]
   }
 }

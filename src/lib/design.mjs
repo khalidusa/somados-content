@@ -369,11 +369,7 @@ export async function arches({ size, photos, copy }) {
   background:linear-gradient(180deg,rgba(4,53,61,0),rgba(4,53,61,.86))}
 .cn{color:#fff;font-size:34px;font-weight:700}
 .cc{color:rgba(255,255,255,.76);font-size:16px;font-weight:400;letter-spacing:.3em;margin-top:6px}
-.strip{position:absolute;top:960px;right:64px;left:64px;display:flex;justify-content:center;gap:16px}
-.chip{display:flex;align-items:center;gap:10px;background:${P.mist};border:1px solid ${P.line};
-  color:${P.deep};font-size:22px;font-weight:500;padding:12px 24px;border-radius:999px}
-.chip span{width:20px;height:20px;color:${P.teal};display:block}
-.chip span svg{width:100%;height:100%}`;
+.bens{position:absolute;top:966px;right:56px;left:56px}`;
 
   const cls = ['a1', 'a2', 'a3'];
   const body = `
@@ -384,7 +380,7 @@ ${header(await logo(), copy.label)}
   ${copy.cities.map((c, i) => `<div class="arch ${cls[i]}"><img class="cover" src="data:image/jpeg;base64,${photos[i]}">
     <div class="cap"><div class="cn">${c.ar}</div><div class="cc">${c.code}</div></div></div>`).join('')}
 </div>
-<div class="strip">${copy.chips.map(t => `<span class="chip"><span>${ICON.check}</span>${t}</span>`).join('')}</div>
+${benefits(copy.benefits)}
 ${await payments()}
 ${footer(copy)}`;
   return shell(size, css, body);
@@ -413,7 +409,7 @@ export async function fan({ size, photos, copy }) {
     const rot = (i - (photos.length - 1) / 2) * 17;
     return `<div class="petal" style="transform:translateX(50%) rotate(${rot}deg)"><img class="cover" src="data:image/jpeg;base64,${p}"></div>`;
   }).join('')}</div>
-<img class="plane" src="${await plane(copy.plane || 'plane-cut-14.png')}">
+<img class="plane" src="${await plane(copy.plane || 'plane-b.png')}">
 ${header(await logo(), copy.label)}
 <div class="hl" data-guard="العنوان" data-fit="76" data-room="952">${headlineHTML(copy.headline)}</div>
 <div class="sub" data-guard="السطر">${copy.sub}</div>
@@ -934,7 +930,7 @@ export async function bigcircle({ size, photo, copy }) {
 .route b{color:${P.ink};font-size:25px;font-weight:700}
 .route span{color:${P.teal};font-size:24px;font-weight:700}
 .hl{position:absolute;top:800px;right:64px;left:64px;font-size:82px;text-align:center;white-space:nowrap}
-.sub{position:absolute;top:918px;right:64px;left:64px;font-size:29px;text-align:center}
+.sub{position:absolute;top:938px;right:64px;left:64px;font-size:28px;text-align:center}
 .bens{position:absolute;top:1006px;right:56px;left:56px}
 .pay{bottom:168px}`;
   const body = `
@@ -1449,7 +1445,7 @@ ${footer(copy)}`;
 export async function halfdome({ size, photo, copy }) {
   const css = `
 .hl{position:absolute;top:180px;right:64px;left:64px;font-size:80px;text-align:center;white-space:nowrap}
-.sub{position:absolute;top:306px;right:64px;left:64px;font-size:29px;text-align:center}
+.sub{position:absolute;top:318px;right:64px;left:64px;font-size:28px;text-align:center}
 .dome{position:absolute;top:386px;right:64px;left:64px;height:540px;overflow:hidden;
   border-radius:26px 26px 476px 476px / 26px 26px 300px 300px;box-shadow:0 26px 54px rgba(6,60,62,.26)}
 .domering{position:absolute;top:366px;right:44px;left:44px;height:580px;
@@ -1665,7 +1661,7 @@ export async function passover({ size, photo, copy }) {
 .parrow{color:${P.teal};font-size:30px;font-weight:800;padding-bottom:12px}
 .scrim{height:820px;background:linear-gradient(180deg,rgba(3,40,46,0),rgba(3,40,46,.46) 26%,rgba(3,40,46,.88) 62%,rgba(3,40,46,.97))}
 .hl{position:absolute;top:836px;right:64px;left:64px;font-size:76px;text-align:center;white-space:nowrap}
-.sub{position:absolute;top:952px;right:64px;left:64px;font-size:28px;text-align:center;color:#f0fbfb}
+.sub{position:absolute;top:966px;right:64px;left:64px;font-size:27px;text-align:center;color:#f0fbfb}
 .plane{position:absolute;top:196px;left:56px;width:224px;z-index:3;transform:rotate(-10deg);
   filter:drop-shadow(0 18px 28px rgba(0,0,0,.4))}
 .hl .lead{color:#fff} .hl .accent{color:#8ff0f0}
