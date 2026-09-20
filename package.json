@@ -1,0 +1,11 @@
+{
+  "name": "somados-content",
+  "version": "0.1.0",
+  "private": true,
+  "description": "نظام نشر تلقائي يومي لسومادوس — صورة 10:00 وريل 19:00 بتوقيت بغداد",
+  "scripts": {
+    "test": "node scripts/test-schedule.js && node scripts/test-matrix.js",
+    "test:schedule": "node scripts/test-schedule.js",
+    "test:matrix": "node scripts/test-matrix.js"
+  }
+}

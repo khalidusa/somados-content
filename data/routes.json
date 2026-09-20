@@ -1,0 +1,134 @@
+[
+  {
+    "from": "IST",
+    "to": "BGW",
+    "name": "Istanbul - Baghdad",
+    "depth": 161
+  },
+  {
+    "from": "IST",
+    "to": "EBL",
+    "name": "Istanbul - Erbil",
+    "depth": 112
+  },
+  {
+    "from": "IST",
+    "to": "BSR",
+    "name": "Istanbul - Basra",
+    "depth": 5
+  },
+  {
+    "from": "IST",
+    "to": "NJF",
+    "name": "Istanbul - Najaf",
+    "depth": 5
+  },
+  {
+    "from": "IST",
+    "to": "KIK",
+    "name": "Istanbul - Kirkuk",
+    "depth": 15
+  },
+  {
+    "from": "IST",
+    "to": "ISU",
+    "name": "Istanbul - Sulaymaniyah",
+    "depth": 25
+  },
+  {
+    "from": "AYT",
+    "to": "BGW",
+    "name": "Antalya - Baghdad",
+    "depth": 14
+  },
+  {
+    "from": "AYT",
+    "to": "EBL",
+    "name": "Antalya - Erbil",
+    "depth": 6
+  },
+  {
+    "from": "SZF",
+    "to": "BGW",
+    "name": "Samsun - Baghdad",
+    "depth": 7
+  },
+  {
+    "from": "ESB",
+    "to": "BGW",
+    "name": "Ankara - Baghdad",
+    "depth": 10
+  },
+  {
+    "from": "ESB",
+    "to": "KIK",
+    "name": "Ankara - Kirkuk",
+    "depth": 10
+  },
+  {
+    "from": "BGW",
+    "to": "IST",
+    "name": "Baghdad - Istanbul",
+    "depth": 151
+  },
+  {
+    "from": "EBL",
+    "to": "IST",
+    "name": "Erbil - Istanbul",
+    "depth": 113
+  },
+  {
+    "from": "BSR",
+    "to": "IST",
+    "name": "Basra - Istanbul",
+    "depth": 5
+  },
+  {
+    "from": "NJF",
+    "to": "IST",
+    "name": "Najaf - Istanbul",
+    "depth": 6
+  },
+  {
+    "from": "KIK",
+    "to": "IST",
+    "name": "Kirkuk - Istanbul",
+    "depth": 14
+  },
+  {
+    "from": "ISU",
+    "to": "IST",
+    "name": "Sulaymaniyah - Istanbul",
+    "depth": 25
+  },
+  {
+    "from": "BGW",
+    "to": "AYT",
+    "name": "Baghdad - Antalya",
+    "depth": 14
+  },
+  {
+    "from": "EBL",
+    "to": "AYT",
+    "name": "Erbil - Antalya",
+    "depth": 6
+  },
+  {
+    "from": "BGW",
+    "to": "SZF",
+    "name": "Baghdad - Samsun",
+    "depth": 7
+  },
+  {
+    "from": "BGW",
+    "to": "ESB",
+    "name": "Baghdad - Ankara",
+    "depth": 10
+  },
+  {
+    "from": "KIK",
+    "to": "ESB",
+    "name": "Kirkuk - Ankara",
+    "depth": 10
+  }
+]
