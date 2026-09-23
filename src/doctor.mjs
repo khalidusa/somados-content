@@ -10,12 +10,15 @@ import path from 'node:path';
 
 const run = promisify(execFile);
 await loadEnv();
+// الموسيقى وffmpeg شرطان للريلز وحدها. اعتبارهما إلزاميين دائماً كان يُفشل
+// خط الصور كل ثلاث ساعات ويرسل إيميلاً، مع أن الصور لا تحتاجهما إطلاقاً.
+const forReels = process.argv.includes('--reels');
 let bad = 0;
 const ok = (m) => console.log(`  ✓ ${m}`);
 const no = (m) => { console.log(`  ✗ ${m}`); bad++; };
 const warn = (m) => console.log(`  ! ${m}`);
 
-console.log('\nفحص سومادوس\n');
+console.log(`\nفحص سومادوس — ${forReels ? 'خط الريلز' : 'خط الصور'}\n`);
 
 process.env.PEXELS_API_KEY ? ok('مفتاح Pexels موجود') : no('PEXELS_API_KEY مفقود — مصدر صور المدن');
 
@@ -39,13 +42,14 @@ try {
   fonts.length >= 6 ? ok(`${fonts.length} ملف خط مدموج`) : no('خطوط Tajawal ناقصة');
 } catch { no('مجلد assets/fonts مفقود'); }
 
+const need = forReels ? no : warn;      // للصور: تنبيه فقط، وللريلز: مانع
 try {
   const music = (await readdir(path.join(ROOT, 'assets', 'music'))).filter(f => /\.(mp3|m4a|wav)$/i.test(f));
-  music.length ? ok(`${music.length} مقطع موسيقى للريلز`) : no('لا موسيقى في assets/music');
-} catch { no('مجلد assets/music مفقود'); }
+  music.length ? ok(`${music.length} مقطع موسيقى للريلز`) : need('لا موسيقى في assets/music');
+} catch { need('مجلد assets/music مفقود — للريلز فقط'); }
 
 try { await run('ffmpeg', ['-version']); ok('ffmpeg جاهز'); }
-catch { no('ffmpeg غير مثبّت — الريلز لن تُبنى'); }
+catch { need('ffmpeg غير مثبّت — للريلز فقط'); }
 
 console.log(bad ? `\n${bad} مشكلة تمنع التشغيل.\n` : '\nكل شيء جاهز.\n');
 process.exit(bad ? 1 : 0);
