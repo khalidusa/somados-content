@@ -14,6 +14,7 @@ import { hasVisibleText, heroGuard, accounts } from './lib/cloudflare.mjs';
 import { ROOT, POSTS, loadJson, loadHistory, saveHistory, loadPlan, savePlan, findIncompleteMonth } from './lib/store.mjs';
 
 const HASH_MIN_DISTANCE = 10;      // أقل من هذا = صورتان متشابهتان
+const PHOTO_COOLDOWN_DAYS = 120;   // حظر الصورة للأبد يجفّف المجموعات؛ أربعة أشهر تكفي
 const force = process.argv.includes('--force');
 const dry = process.argv.includes('--dry-run');
 const limitArg = process.argv.find(a => a.startsWith('--limit='));
@@ -27,18 +28,19 @@ const data = {
   copyAr: await loadJson('data/copy.ar.json'),
   visaQueries: (await loadJson('data/queries.json')).visas
 };
-const POST_HOUR = brand.schedule.postHour;
+const POST_HOURS = brand.schedule.postHours ?? [brand.schedule.postHour ?? 10];
+const POST_HOURS_UTC = POST_HOURS.map(h => h - 3);            // بغداد = UTC+3 بلا توقيت صيفي
 
 let { year, month, key: monthKey } = targetMonth();
 if (!process.env.MONTH) {
-  const pending = await findIncompleteMonth('', POST_HOUR - 3);   // بغداد = UTC+3
+  const pending = await findIncompleteMonth('', POST_HOURS_UTC);
   if (pending) {
     ({ year, month, key: monthKey } = pending);
     console.log(`نكمل ${monthKey}: ${pending.done}/${pending.days} منشوراً جاهزاً.`);
   } else {
     const now = new Date();
     const curKey = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
-    const remaining = monthSlots(now.getUTCFullYear(), now.getUTCMonth() + 1, POST_HOUR)
+    const remaining = monthSlots(now.getUTCFullYear(), now.getUTCMonth() + 1, POST_HOURS)
       .filter(s => new Date(s.dueAt).getTime() > Date.now()).length;
     if (remaining >= 3 && !(await loadPlan(curKey))) {
       year = now.getUTCFullYear(); month = now.getUTCMonth() + 1; monthKey = curKey;
@@ -48,8 +50,8 @@ if (!process.env.MONTH) {
       // وإلا بقي الطابور يستهلك بلا أن يُبنى له بديل.
       for (let hop = 0; hop < 2; hop++) {
         const plan = await loadPlan(monthKey);
-        const days = new Date(Date.UTC(year, month, 0)).getUTCDate();
-        if (!plan || (plan.posts?.length ?? 0) < days) break;
+        const slotCount = monthSlots(year, month, POST_HOURS).length;
+        if (!plan || (plan.posts?.length ?? 0) < slotCount) break;
         month += 1;
         if (month > 12) { month = 1; year += 1; }
         monthKey = `${year}-${String(month).padStart(2, '0')}`;
@@ -60,7 +62,7 @@ if (!process.env.MONTH) {
 }
 
 // الأيام التي مضت لا تُنتَج: Buffer لا يجدول في الماضي، وإنتاجها إهدار خالص.
-const allSlots = monthSlots(year, month, POST_HOUR);
+const allSlots = monthSlots(year, month, POST_HOURS);
 const slots = allSlots.filter(s => new Date(s.dueAt).getTime() > Date.now() + 20 * 60 * 1000);
 if (slots.length < allSlots.length) console.log(`تخطّينا ${allSlots.length - slots.length} يوماً مضى من ${monthKey}.`);
 const existing = await loadPlan(monthKey);
@@ -69,7 +71,9 @@ if (existing && existing.posts.length >= slots.length && !force) {
   process.exit(0);
 }
 
-const done = force ? new Map() : new Map((existing?.posts ?? []).map(p => [p.day, p]));
+// منشورات قديمة بلا ساعة تُنسب إلى أول موعد في اليوم
+const slotKey = (p) => p.slotId ?? `${p.day}@${p.hour ?? POST_HOURS[0]}`;
+const done = force ? new Map() : new Map((existing?.posts ?? []).map(p => [slotKey(p), p]));
 if (done.size) console.log(`استئناف: ${done.size} منشوراً مرسوماً سابقاً.`);
 
 const history = await loadHistory();
@@ -90,7 +94,7 @@ history.photoIds ??= {};
   }
 }
 
-console.log(`خطة ${monthKey}: ${slots.length} منشوراً، الساعة ${String(POST_HOUR).padStart(2, '0')}:00 بتوقيت بغداد.`);
+console.log(`خطة ${monthKey}: ${slots.length} منشوراً، الساعات ${POST_HOURS.map(h => String(h).padStart(2, '0') + ':00').join(' و')} بتوقيت بغداد.`);
 
 // ── ١. تركيبة فريدة لكل يوم ──────────────────────────────────────────
 // المنشورات المرسومة سابقاً تدخل الحساب أيضاً: بدونها كان الاستئناف يعيد
@@ -131,12 +135,24 @@ await mkdir(outDir, { recursive: true });
 const TEXT_GUARD = process.env.PHOTO_TEXT_GUARD === '1'
   || (process.env.PHOTO_TEXT_GUARD !== '0' && accounts().length >= 2);
 if (TEXT_GUARD) console.log('حارس النص داخل الصور: مفعّل');
+let guardWarned = false;
+
+/** الصورة محظورة إن استُعملت خلال مدة التبريد. القيم القديمة نصوص مراجع
+ *  لا تواريخ، ونعاملها كحديثة حتى تنتهي دورتها الطبيعية. */
+function photoBlocked(id) {
+  const v = history.photoIds[String(id)];
+  if (!v) return false;
+  const t = Date.parse(v);
+  if (Number.isNaN(t)) return true;
+  return (Date.now() - t) < PHOTO_COOLDOWN_DAYS * 864e5;
+}
 
 const poolCache = new Map();
 // أنقرة مدينة داخلية بلا بحر: صورة ساحلية تحت اسمها خطأ يراه الزبون فوراً.
 // حين يحمل القالب اسم المدينة فوق صورتها، نقبل فقط صورة يذكر وصفها المكان،
 // وإن لم توجد ننتقل إلى صور "الرحلة" (طائرة، سحاب، مطار) لا إلى مدينة أخرى.
-const JOURNEY_FALLBACK = ['airplane wing above clouds', 'airport terminal window sunlight', 'airplane window clouds day'];
+// تُقرأ من بيانات الوجهات بدل قائمة مثبّتة: توسيعها هناك يفيد البديل تلقائياً
+const JOURNEY_FALLBACK = data.destinations.JOURNEY?.q ?? ['airplane wing above clouds'];
 
 async function photosFor(queries, dayId, page, { strict = false } = {}) {
   const chosen = [];
@@ -161,21 +177,25 @@ async function photosFor(queries, dayId, page, { strict = false } = {}) {
       // الحلقة تصل هنا فقط إذا لم تنجح الطبقة السابقة (taken يكسر الحلقة)
       if (tierIndex === 1) console.log(`  اليوم ${dayId}: لا صورة مطابقة صالحة لـ"${q}" — نستبدلها بصورة رحلة`);
       for (const cand of candidates) {
-        if (history.photoIds[cand.id]) continue;
+        if (photoBlocked(cand.id)) continue;
         if (chosen.some(c => c.id === cand.id)) continue;
         let b64;
         try { b64 = await download(cand); } catch (e) { console.warn(`  تعذّر التنزيل (${e.message})`); continue; }
-        const bad = qualityReject(await photoQuality(page, b64), { sky: tierIndex === 1 });
+        const q = await photoQuality(page, b64);
+        const bad = qualityReject(q, { sky: tierIndex === 1 });
         if (bad) { console.log(`  اليوم ${dayId}: ${bad} — نأخذ غيرها`); continue; }
-        if (TEXT_GUARD && chosen.length === 0) {       // البطل فقط: الصور الثانوية صغيرة ولا تُقرأ
-          const seen = await heroGuard(b64);
-          if (!seen.checked) { console.warn(`  اليوم ${dayId}: تعذّر فحص الصورة بالرؤية — نرفضها احتياطاً`); continue; }
-          if (seen.reject) { console.log(`  اليوم ${dayId}: ${seen.why} — نأخذ غيرها`); continue; }
-        }
         const h = await photoHash(page, b64);
         const clash = history.hashes.find(prev => hammingDistance(prev.hash, h) < HASH_MIN_DISTANCE);
         if (clash) { console.log(`  اليوم ${dayId}: صورة تشبه ${clash.ref} — نأخذ غيرها`); continue; }
-        taken = { ...cand, b64, hash: h, tier: tierIndex };
+        // الحارس آخر فحص وأغلاه: يُستدعى للمرشّح الذي اجتاز كل ما قبله فقط،
+        // وإلا صرفنا حصة يوم كامل على صور مرفوضة أصلاً.
+        if (TEXT_GUARD && chosen.length === 0) {
+          const seen = await heroGuard(b64);
+          if (seen.exhausted) { if (!guardWarned) { console.warn('  حصة الرؤية نفدت اليوم — نعتمد على فلتر الوصف'); guardWarned = true; } }
+          else if (!seen.checked) { console.warn(`  اليوم ${dayId}: تعذّر فحص الصورة بالرؤية — نرفضها احتياطاً`); continue; }
+          else if (seen.reject) { console.log(`  اليوم ${dayId}: ${seen.why} — نأخذ غيرها`); continue; }
+        }
+        taken = { ...cand, b64, hash: h, tier: tierIndex, q };
         break;
       }
     }
@@ -228,31 +248,33 @@ const pool2 = async (q) => pool([q]);
 /** يمرّ على المرشحين ويعيد أول صورة تعبر كل الفحوص. */
 async function tryCandidates(candidates, chosen, dayId, page, sky) {
   for (const cand of candidates) {
-    if (history.photoIds[cand.id]) continue;
+    if (photoBlocked(cand.id)) continue;
     if (chosen.some(c => c.id === cand.id)) continue;
     let b64;
     try { b64 = await download(cand); } catch { continue; }
-    const bad = qualityReject(await photoQuality(page, b64), { sky });
+    const q = await photoQuality(page, b64);
+    const bad = qualityReject(q, { sky });
     if (bad) { console.log(`  اليوم ${dayId}: ${bad} — نأخذ غيرها`); continue; }
-    if (TEXT_GUARD) {
-      const seen = await heroGuard(b64);
-      if (!seen.checked) { console.warn(`  اليوم ${dayId}: تعذّر فحص الصورة بالرؤية — نرفضها احتياطاً`); continue; }
-      if (seen.reject) { console.log(`  اليوم ${dayId}: ${seen.why} — نأخذ غيرها`); continue; }
-    }
     const h = await photoHash(page, b64);
     const clash = history.hashes.find(prev => hammingDistance(prev.hash, h) < HASH_MIN_DISTANCE);
     if (clash) { console.log(`  اليوم ${dayId}: صورة تشبه ${clash.ref} — نأخذ غيرها`); continue; }
-    return { ...cand, b64, hash: h, tier: 0 };
+    if (TEXT_GUARD) {
+      const seen = await heroGuard(b64);
+      if (seen.exhausted) { if (!guardWarned) { console.warn('  حصة الرؤية نفدت اليوم — نعتمد على فلتر الوصف'); guardWarned = true; } }
+      else if (!seen.checked) { console.warn(`  اليوم ${dayId}: تعذّر فحص الصورة بالرؤية — نرفضها احتياطاً`); continue; }
+      else if (seen.reject) { console.log(`  اليوم ${dayId}: ${seen.why} — نأخذ غيرها`); continue; }
+    }
+    return { ...cand, b64, hash: h, tier: 0, q };
   }
   return null;
 }
 
 const results = [...done.values()];
-const todo = planned.filter(p => !done.has(p.day)).slice(0, limit);
+const todo = planned.filter(p => !done.has(p.slotId)).slice(0, limit);
 
 await withBrowser(async (page) => {
   for (const post of todo) {
-    const dayId = String(post.day).padStart(2, '0');
+    const dayId = `${String(post.day).padStart(2, '0')}h${String(post.hour).padStart(2, '0')}`;
     const photos = post.cityLabels
       ? await photosForCities(post, dayId, page)
       : await photosFor(post.queries, dayId, page, { strict: true });
@@ -260,6 +282,14 @@ await withBrowser(async (page) => {
 
     // القوالب التي تطلب صورة ثانية داخل النص (البطاقة البريدية) تأخذها من المجموعة نفسها
     if (post.copy.photo2Needed && photos[1]) post.copy.photo2 = photos[1].b64;
+
+    // معالجة إضاءة عند الرسم: رفض كل صورة أغمق من الحد كان يجفّف المجموعات،
+    // ورفع سطوعها هنا يبقي الإعلان مشرقاً بلا أن نخسر الصورة.
+    const mean = photos.reduce((a, p) => a + (p.q?.mean ?? 120), 0) / photos.length;
+    const sat = photos.reduce((a, p) => a + (p.q?.saturation ?? 40), 0) / photos.length;
+    const lift = Math.min(1.5, Math.max(1, 116 / Math.max(40, mean)));
+    const boost = sat < 34 ? 1.16 : 1.04;
+    if (lift > 1.02 || boost > 1.05) post.copy.photoFilter = `brightness(${lift.toFixed(2)}) saturate(${boost.toFixed(2)})`;
     const html = await buildPostHTML({ layout: post.layout, size: SIZES.feed, photos: photos.map(p => p.b64), copy: post.copy });
     const { buf, fit } = await shoot(page, html, SIZES.feed);
     if (fit && fit.ok === false) {
@@ -274,7 +304,7 @@ await withBrowser(async (page) => {
       const rel = `posts/${monthKey}/day${dayId}-photo${i ? i + 1 : ''}.jpg`;
       await writeFile(path.join(ROOT, rel), Buffer.from(ph.b64, 'base64'));
       relPhotos.push(rel);
-      history.photoIds[ph.id] = `${monthKey}/day${dayId}`;
+      history.photoIds[ph.id] = new Date().toISOString();
       history.hashes.push({ hash: ph.hash, ref: `${monthKey}/day${dayId}` });
     }
 
@@ -282,7 +312,8 @@ await withBrowser(async (page) => {
     history.headlines[post.headlineKey] = new Date().toISOString();
 
     results.push({
-      day: post.day, dueAt: post.dueAt, localLabel: post.localLabel,
+      day: post.day, hour: post.hour, slotId: post.slotId,
+      dueAt: post.dueAt, localLabel: post.localLabel,
       layout: post.layout, comboId: post.comboId,
       images: { feed: relFeed, photos: relPhotos },
       credit: photos.map(p => p.photographer),
@@ -294,13 +325,13 @@ await withBrowser(async (page) => {
     console.log(`  ${post.localLabel}  ${post.layout.padEnd(11)} "${post.headlineKey.slice(0, 52)}"`);
 
     // نقطة حفظ: عطل في اليوم ٢٦ يجب ألا يضيّع الأيام ٢٥ السابقة
-    results.sort((a, b) => a.day - b.day);
-    await savePlan(monthKey, { month: monthKey, timezone: brand.schedule.timezone, postTime: `${String(POST_HOUR).padStart(2, '0')}:00`, generatedAt: new Date().toISOString(), posts: results });
+    results.sort((a, b) => new Date(a.dueAt) - new Date(b.dueAt));
+    await savePlan(monthKey, { month: monthKey, timezone: brand.schedule.timezone, postHours: POST_HOURS, generatedAt: new Date().toISOString(), posts: results });
     await saveHistory(history);
   }
 });
 
-const plan = { month: monthKey, timezone: brand.schedule.timezone, postTime: `${String(POST_HOUR).padStart(2, '0')}:00`, generatedAt: new Date().toISOString(), posts: results.sort((a, b) => a.day - b.day) };
+const plan = { month: monthKey, timezone: brand.schedule.timezone, postHours: POST_HOURS, generatedAt: new Date().toISOString(), posts: results.sort((a, b) => new Date(a.dueAt) - new Date(b.dueAt)), postHours: POST_HOURS };
 await savePlan(monthKey, plan);
 await saveHistory(history);
 await writeReview(monthKey, plan);
@@ -310,7 +341,7 @@ async function writeReview(monthKey, plan) {
   const esc = s => String(s).replace(/[<&]/g, c => (c === '<' ? '&lt;' : '&amp;'));
   const cards = plan.posts.map(p => `
     <figure>
-      <img src="day${String(p.day).padStart(2, '0')}-feed.jpg" loading="lazy" alt="">
+      <img src="${p.images.feed.split('/').pop()}" loading="lazy" alt="">
       <figcaption><b>${p.localLabel}</b> · ${p.type} · ${p.layout}
         <details><summary>كابشن فيسبوك</summary><pre>${esc(p.captions.facebook)}</pre></details>
         <details><summary>كابشن انستقرام</summary><pre>${esc(p.captions.instagram)}</pre></details>
@@ -324,7 +355,7 @@ figure{margin:0;background:#112022;border:1px solid #1e3234;border-radius:14px;o
 img{width:100%;display:block}figcaption{padding:12px 14px;font-size:12px;color:#9fc4c4}
 figcaption b{color:#00c8c8}pre{white-space:pre-wrap;font-size:11px;color:#8fb3b3;background:#0b1416;padding:10px;border-radius:8px}</style>
 <h1>سومادوس — ${monthKey}</h1>
-<div class="sub">${plan.posts.length} منشوراً · ${plan.postTime} بتوقيت بغداد · بُنيت ${plan.generatedAt.slice(0, 10)}</div>
+<div class="sub">${plan.posts.length} منشوراً · ${(plan.postHours ?? []).map(h => h + ':00').join(' و')} بتوقيت بغداد · بُنيت ${plan.generatedAt.slice(0, 10)}</div>
 <div class="grid">${cards}</div>`;
   await writeFile(path.join(POSTS, monthKey, 'index.html'), html);
 }

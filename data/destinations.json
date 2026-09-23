@@ -10,7 +10,12 @@
       "Istanbul skyline sunset",
       "Istanbul Bosphorus boats",
       "Ortakoy mosque Istanbul",
-      "Maiden tower Istanbul"
+      "Maiden tower Istanbul",
+      "Istanbul ferry Bosphorus",
+      "Suleymaniye mosque Istanbul",
+      "Istanbul rooftops view",
+      "Bosphorus strait aerial",
+      "Istanbul waterfront day"
     ]
   },
   "ESB": {
@@ -22,7 +27,10 @@
       "Ankara Kocatepe mosque",
       "Ankara castle day",
       "Ankara city skyline",
-      "Ankara aerial view"
+      "Ankara aerial view",
+      "Ankara park autumn",
+      "Ankara street architecture",
+      "Ankara Turkey buildings"
     ]
   },
   "AYT": {
@@ -35,7 +43,11 @@
       "Kaleici Antalya",
       "Antalya coast turquoise",
       "Duden waterfall Antalya",
-      "Antalya beach cliffs"
+      "Antalya beach cliffs",
+      "Antalya Konyaalti beach",
+      "Antalya lighthouse sea",
+      "Antalya mountains coast",
+      "Antalya boats harbour"
     ]
   },
   "SZF": {
@@ -46,7 +58,10 @@
       "Samsun Turkey coast",
       "Samsun city",
       "Black Sea coast Turkey green",
-      "Amisos hill Samsun"
+      "Amisos hill Samsun",
+      "Samsun waterfront",
+      "Black Sea Turkey shore",
+      "Samsun park sea"
     ]
   },
   "BGW": {
@@ -58,7 +73,10 @@
       "Baghdad skyline",
       "Baghdad bridge",
       "Abu Nuwas Baghdad",
-      "Iraq palm trees river"
+      "Iraq palm trees river",
+      "Baghdad architecture",
+      "Tigris riverbank Baghdad",
+      "Iraq city river day"
     ]
   },
   "EBL": {
@@ -70,7 +88,9 @@
       "Erbil city",
       "Kurdistan mountains green",
       "Erbil skyline",
-      "Kurdistan valley spring"
+      "Kurdistan valley spring",
+      "Erbil bazaar architecture",
+      "Kurdistan hills sunny"
     ]
   },
   "BSR": {
@@ -82,7 +102,9 @@
       "Shatt al-Arab river",
       "Iraq marshes boat",
       "Basra city",
-      "Iraq date palms"
+      "Iraq date palms",
+      "Basra waterfront",
+      "Iraq river canal palms"
     ]
   },
   "NJF": {
@@ -93,7 +115,8 @@
       "Najaf city",
       "Iraq desert dunes golden",
       "Iraq palm grove",
-      "Kufa Iraq"
+      "Kufa Iraq",
+      "Iraq desert landscape day"
     ]
   },
   "ISU": {
@@ -104,7 +127,8 @@
       "Sulaymaniyah city",
       "Azmar mountain",
       "Dukan lake",
-      "Kurdistan mountains sunny"
+      "Kurdistan mountains sunny",
+      "Kurdistan green valley"
     ]
   },
   "JOURNEY": {
@@ -115,7 +139,10 @@
       "airplane wing above clouds",
       "airplane window clouds day",
       "airport terminal window sunlight",
-      "runway airplane takeoff day"
+      "runway airplane takeoff day",
+      "clouds from airplane",
+      "airport departure gate day",
+      "airplane tail sky"
     ]
   },
   "KIK": {
@@ -125,7 +152,8 @@
     "q": [
       "Kirkuk Iraq",
       "Iraq northern landscape",
-      "Iraq town hills"
+      "Iraq town hills",
+      "Iraq plains day"
     ]
   }
 }

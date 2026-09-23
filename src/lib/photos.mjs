@@ -46,7 +46,7 @@ export function metaFilter(p) {
 }
 
 /** كل الصور الصالحة لمجموعة استعلامات، مرتبة عشوائياً بالبذرة نفسها. */
-export async function pool(queries, { perQuery = 40, pages = 2 } = {}) {
+export async function pool(queries, { perQuery = 40, pages = 3 } = {}) {
   const out = [];
   for (const q of queries) {
     const photos = [];
@@ -114,8 +114,8 @@ export async function photoQuality(page, imageB64) {
  * وحدّ المدن كان يرفضها كلها فتتحول أيام كاملة إلى فجوات في التقويم.
  */
 export function qualityReject(q, { sky = false } = {}) {
-  if (q.mean < (sky ? 80 : 92)) return `الصورة معتمة (متوسط الإضاءة ${q.mean.toFixed(0)})`;
-  if (q.darkRatio > (sky ? 0.5 : 0.42)) return `${Math.round(q.darkRatio * 100)}% من الصورة أسود`;
+  if (q.mean < (sky ? 66 : 74)) return `الصورة معتمة (متوسط الإضاءة ${q.mean.toFixed(0)})`;
+  if (q.darkRatio > (sky ? 0.56 : 0.5)) return `${Math.round(q.darkRatio * 100)}% من الصورة أسود`;
   if (q.sd < (sky ? 14 : 28)) return `تباين ضعيف (${q.sd.toFixed(0)})`;
   if (q.saturation < (sky ? 5 : 20)) return `صورة باهتة (تشبّع ${q.saturation.toFixed(0)})`;
   return null;

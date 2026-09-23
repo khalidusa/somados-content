@@ -68,7 +68,10 @@
   },
   "schedule": {
     "timezone": "Asia/Baghdad",
-    "postHour": 10,
+    "postHours": [
+      10,
+      15
+    ],
     "reelHour": 19
   }
 }

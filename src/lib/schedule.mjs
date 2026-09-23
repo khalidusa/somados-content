@@ -44,17 +44,26 @@ export function targetMonth(override = process.env.MONTH) {
   return { year, month, key: `${year}-${String(month).padStart(2, '0')}` };
 }
 
-/** كل مواعيد الشهر: ساعة واحدة في اليوم بتوقيت بغداد */
-export function monthSlots(year, month, hour = 10) {
+/**
+ * كل مواعيد الشهر. hours يقبل رقماً واحداً أو قائمة (مثلاً [10, 15])،
+ * فيخرج لكل يوم موعد لكل ساعة، مرتّبة زمنياً.
+ * slotId يميّز الموعد داخل اليوم — اليوم وحده لم يعد مفتاحاً كافياً.
+ */
+export function monthSlots(year, month, hours = [10]) {
+  const list = Array.isArray(hours) ? [...hours].sort((a, b) => a - b) : [hours];
   const out = [];
   for (let d = 1; d <= daysInMonth(year, month); d++) {
-    const at = baghdadWallTimeToUtc(year, month, d, hour);
-    out.push({
-      day: d,
-      weekday: new Date(Date.UTC(year, month - 1, d, 12)).getUTCDay(),
-      dueAt: toBufferDueAt(at),
-      localLabel: `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')} ${String(hour).padStart(2, '0')}:00 بغداد`
-    });
+    for (const hour of list) {
+      const at = baghdadWallTimeToUtc(year, month, d, hour);
+      out.push({
+        day: d,
+        hour,
+        slotId: `${d}@${hour}`,
+        weekday: new Date(Date.UTC(year, month - 1, d, 12)).getUTCDay(),
+        dueAt: toBufferDueAt(at),
+        localLabel: `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')} ${String(hour).padStart(2, '0')}:00 بغداد`
+      });
+    }
   }
-  return out;
+  return out.sort((a, b) => new Date(a.dueAt) - new Date(b.dueAt));
 }

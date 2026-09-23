@@ -29,7 +29,7 @@ const limit = limitArg ? Number(limitArg.split('=')[1]) : Infinity;
 
 let { year, month, key: baseKey } = targetMonth();
 if (!process.env.MONTH) {
-  const pending = await findIncompleteMonth('-reels');
+  const pending = await findIncompleteMonth('-reels', [REEL_HOUR - 3]);
   if (pending) { ({ year, month } = pending); baseKey = pending.key.replace('-reels', ''); }
   else {
     const now = new Date();

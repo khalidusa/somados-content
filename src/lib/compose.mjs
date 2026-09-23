@@ -119,7 +119,8 @@ export function buildPost({ monthKey, slot, index, brand, data, salt = '' }) {
   const comboId = hashString([layout, fromCode, toCode, headlineKey].join('|')).toString(16);
 
   return {
-    day: slot.day, dueAt: slot.dueAt, localLabel: slot.localLabel,
+    day: slot.day, hour: slot.hour, slotId: slot.slotId ?? `${slot.day}@${slot.hour ?? ''}`,
+    dueAt: slot.dueAt, localLabel: slot.localLabel,
     layout, comboId, queries, photosNeeded: spec.photos, cityLabels: !!spec.cityLabels,
     copy, hashtags, captions, headlineKey
   };

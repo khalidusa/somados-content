@@ -1827,5 +1827,9 @@ export const LAYOUTS = { glassduo, sheet, glasspanel, medallion, duotone, passov
 export async function buildPostHTML({ layout, size, photos, copy }) {
   const fn = LAYOUTS[layout];
   if (!fn) throw new Error('قالب غير معروف: ' + layout);
-  return fn({ size, photo: photos[0], photos, copy });
+  const html = await fn({ size, photo: photos[0], photos, copy });
+  // تصحيح الإضاءة يُحقن كقاعدة واحدة بدل تعديل كل قالب على حدة
+  return copy.photoFilter
+    ? html.replace('</style>', `.cover,.ken img,.word{filter:${copy.photoFilter}}\n</style>`)
+    : html;
 }

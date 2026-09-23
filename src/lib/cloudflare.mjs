@@ -147,11 +147,19 @@ export async function hasVisibleText(imageB64, { retries = 1, strict = false } =
 
 /** الصورة البطلة تمر بالسؤالين؛ رفض أحدهما يكفي. */
 export async function heroGuard(imageB64) {
+  if (allExhausted()) return { checked: false, reject: false, exhausted: true };
   const a = await hasVisibleText(imageB64);
   if (a.checked && a.hasText) return { checked: true, reject: true, why: 'كتابة أو أشخاص' };
   const b = await visionOnce(imageB64, QUESTIONS[1]);
   if (b.checked && b.hasText) return { checked: true, reject: true, why: 'الشخص هو موضوع الصورة' };
+  if (!a.checked && !b.checked && allExhausted()) return { checked: false, reject: false, exhausted: true };
   return { checked: a.checked || b.checked, reject: false };
+}
+
+/** نفدت حصة كل الحسابات اليوم؟ عندها نُخفّض الحراسة بدل أن نوقف الإنتاج. */
+export function allExhausted() {
+  const accs = accounts();
+  return accs.length > 0 && accs.every(a => spentToday(a.id) + COST.vision >= PER_ACCOUNT_BUDGET);
 }
 
 async function visionOnce(imageB64, question) {

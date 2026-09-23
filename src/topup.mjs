@@ -41,7 +41,11 @@ const cutoff = Date.now() + LEAD_MINUTES * 60 * 1000;
 const queue = [];
 for (const key of await listPlans()) {
   const plan = await loadPlan(key);
-  for (const p of plan?.posts ?? []) if (new Date(p.dueAt).getTime() > cutoff) queue.push({ ...p, planKey: key });
+  for (const p of plan?.posts ?? []) {
+    if (new Date(p.dueAt).getTime() <= cutoff) continue;
+    // المفتاح صار الموعد لا اليوم: صارت في اليوم منشورتان
+    queue.push({ ...p, planKey: key, slotKey: p.slotId ?? `${p.day}@${p.hour ?? (plan.postHours ?? [10])[0]}` });
+  }
 }
 queue.sort((a, b) => new Date(a.dueAt) - new Date(b.dueAt));
 console.log(`${queue.length} منشوراً مستقبلياً في الخطط.`);
@@ -54,7 +58,7 @@ for (const channel of channels) {
   if (room <= 0) { console.log(`${head} — ممتلئ`); continue; }
 
   const done = posted[channel.id] ?? {};
-  const todo = queue.filter(p => !done[`${p.planKey}#${p.day}`]).slice(0, room);
+  const todo = queue.filter(p => !done[`${p.planKey}#${p.slotKey}`]).slice(0, room);
   if (!todo.length) { console.log(`${head} — لا جديد`); continue; }
   console.log(`${head} — نضيف ${todo.length}`);
 
@@ -80,7 +84,7 @@ for (const channel of channels) {
       metadata: metadataFor(channel.kind, isReel)
     });
     posted[channel.id] = posted[channel.id] ?? {};
-    posted[channel.id][`${p.planKey}#${p.day}`] = { postId: post.id, dueAt: p.dueAt, at: new Date().toISOString() };
+    posted[channel.id][`${p.planKey}#${p.slotKey}`] = { postId: post.id, dueAt: p.dueAt, at: new Date().toISOString() };
     created++;
     console.log(`  + ${p.localLabel}  ${post.id}`);
   }

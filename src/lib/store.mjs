@@ -57,7 +57,7 @@ export function mediaUrl(relPath) {
  * إلى الأبد، فيعلق المحرك عليه ولا يبني الشهر التالي أبداً.
  * hourUtc: ساعة النشر بـUTC (١٠:٠٠ بغداد = 07، و١٩:٠٠ = 16).
  */
-export async function findIncompleteMonth(suffix = '', hourUtc = 7) {
+export async function findIncompleteMonth(suffix = '', hoursUtc = [7]) {
   const want = suffix ? new RegExp('^\\d{4}-\\d{2}' + suffix + '$') : /^\d{4}-\d{2}$/;
   const cutoff = Date.now() + 20 * 60 * 1000;
   for (const key of await listPlans()) {
@@ -65,10 +65,15 @@ export async function findIncompleteMonth(suffix = '', hourUtc = 7) {
     const [y, m] = key.split('-').map(Number);
     const days = new Date(Date.UTC(y, m, 0)).getUTCDate();
     const plan = await loadPlan(key);
-    const have = new Set((plan?.posts ?? []).map(p => p.day));
+    const hours = Array.isArray(hoursUtc) ? hoursUtc : [hoursUtc];
+    const have = new Set((plan?.posts ?? []).map(p => p.slotId ?? `${p.day}@${p.hour ?? ''}`));
     let missing = 0;
     for (let d = 1; d <= days; d++) {
-      if (Date.UTC(y, m - 1, d, hourUtc) > cutoff && !have.has(d)) missing++;
+      for (const [i, hu] of hours.entries()) {
+        const localHour = (plan?.postHours ?? [])[i];
+        const key = `${d}@${localHour ?? ''}`;
+        if (Date.UTC(y, m - 1, d, hu) > cutoff && !have.has(key)) missing++;
+      }
     }
     if (missing) return { key, year: y, month: m, done: plan?.posts?.length ?? 0, days, missing };
   }
