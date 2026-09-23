@@ -31,7 +31,7 @@ const POST_HOUR = brand.schedule.postHour;
 
 let { year, month, key: monthKey } = targetMonth();
 if (!process.env.MONTH) {
-  const pending = await findIncompleteMonth();
+  const pending = await findIncompleteMonth('', POST_HOUR - 3);   // بغداد = UTC+3
   if (pending) {
     ({ year, month, key: monthKey } = pending);
     console.log(`نكمل ${monthKey}: ${pending.done}/${pending.days} منشوراً جاهزاً.`);
@@ -43,6 +43,18 @@ if (!process.env.MONTH) {
     if (remaining >= 3 && !(await loadPlan(curKey))) {
       year = now.getUTCFullYear(); month = now.getUTCMonth() + 1; monthKey = curKey;
       console.log(`بقي ${remaining} يوماً من هذا الشهر — نملأ ${monthKey} أولاً.`);
+    } else {
+      // الشهر القادم مكتمل؟ نتقدّم إلى الذي يليه بدل التوقف بلا عمل،
+      // وإلا بقي الطابور يستهلك بلا أن يُبنى له بديل.
+      for (let hop = 0; hop < 2; hop++) {
+        const plan = await loadPlan(monthKey);
+        const days = new Date(Date.UTC(year, month, 0)).getUTCDate();
+        if (!plan || (plan.posts?.length ?? 0) < days) break;
+        month += 1;
+        if (month > 12) { month = 1; year += 1; }
+        monthKey = `${year}-${String(month).padStart(2, '0')}`;
+        console.log(`الشهر السابق مكتمل — ننتقل إلى ${monthKey}.`);
+      }
     }
   }
 }
